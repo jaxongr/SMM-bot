@@ -19,8 +19,8 @@ export class SmsApiService {
   private readonly apiKey: string;
 
   constructor(private readonly configService: ConfigService) {
-    this.apiUrl = this.configService.getOrThrow<string>('SMS_ACTIVATE_API_URL');
-    this.apiKey = this.configService.getOrThrow<string>('SMS_ACTIVATE_API_KEY');
+    this.apiUrl = this.configService.get<string>('SMS_ACTIVATE_API_URL', 'https://api.sms-activate.org');
+    this.apiKey = this.configService.get<string>('SMS_ACTIVATE_API_KEY', '');
   }
 
   private buildUrl(action: string, params: Record<string, string> = {}): string {
