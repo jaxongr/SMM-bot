@@ -63,8 +63,12 @@ export function createServicesComposer(
         return;
       }
 
+      const formattedServices = services.map((s: Record<string, unknown>) => ({
+        ...s,
+        pricePerUnit: Number(s.pricePerUnit),
+      }));
       await ctx.editMessageText(ctx.t('select_service'), {
-        reply_markup: serviceKeyboard(services, lang),
+        reply_markup: serviceKeyboard(formattedServices, lang),
       });
     } catch (error) {
       logger.error(`Error loading services: ${error}`);

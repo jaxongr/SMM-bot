@@ -19,7 +19,7 @@ interface JwtPayload {
   role: string;
 }
 
-interface TokenPair {
+export interface TokenPair {
   accessToken: string;
   refreshToken: string;
 }
@@ -195,9 +195,10 @@ export class AuthService implements OnModuleDestroy {
       role: user.role,
     };
 
+    const payload = { sub: jwtPayload.sub, role: jwtPayload.role } as Record<string, unknown>;
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(jwtPayload),
-      this.jwtService.signAsync(jwtPayload, {
+      this.jwtService.signAsync(payload),
+      this.jwtService.signAsync(payload, {
         secret: this.refreshSecret,
         expiresIn: this.refreshExpiration,
       }),
