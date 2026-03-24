@@ -19,8 +19,8 @@ export class SettingsService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit() {
-    const redisUrl = this.configService.get<string>('redis.url', 'redis://localhost:6379');
-    this.redis = new Redis(redisUrl);
+    const { createRedisClient } = require('../../common/utils/redis.helper');
+    this.redis = createRedisClient(this.configService);
     this.logger.log('Settings Redis client initialized');
   }
 

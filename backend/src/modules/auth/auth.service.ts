@@ -36,8 +36,8 @@ export class AuthService implements OnModuleDestroy {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {
-    const redisUrl = this.configService.get<string>('redis.url', 'redis://localhost:6379');
-    this.redis = new Redis(redisUrl);
+    const { createRedisClient } = require('../../common/utils/redis.helper');
+    this.redis = createRedisClient(this.configService);
     this.refreshSecret = this.configService.get<string>('jwt.refreshSecret') || 'fallback-refresh';
     this.refreshExpiration = this.configService.get<string>('jwt.refreshExpiration', '7d');
   }

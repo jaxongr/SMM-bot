@@ -24,8 +24,8 @@ export class HealthController {
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
   ) {
-    const redisUrl = this.configService.get<string>('redis.url', 'redis://localhost:6379');
-    this.redis = new Redis(redisUrl);
+    const { createRedisClient } = require('../../common/utils/redis.helper');
+    this.redis = createRedisClient(this.configService);
   }
 
   @Get()
