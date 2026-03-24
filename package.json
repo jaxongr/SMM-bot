@@ -1,0 +1,22 @@
+{
+  "name": "smm-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Professional SMM Bot for Telegram & Instagram with Admin Dashboard",
+  "workspaces": [
+    "backend",
+    "admin"
+  ],
+  "scripts": {
+    "dev:backend": "npm run start:dev --workspace=backend",
+    "dev:admin": "npm run dev --workspace=admin",
+    "build:backend": "npm run build --workspace=backend",
+    "build:admin": "npm run build --workspace=admin",
+    "lint": "npm run lint --workspaces",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

@@ -1,0 +1,65 @@
+import { Composer } from 'grammy';
+import { Logger } from '@nestjs/common';
+import { type Conversation, createConversation } from '@grammyjs/conversations';
+import { BotContext } from '../types/context.type';
+import { mainMenuKeyboard } from '../keyboards/main-menu.keyboard';
+import { PrismaService } from '../../../prisma/prisma.service';
+
+const logger = new Logger('SupportComposer');
+
+type SupportConversation = Conversation<BotContext>;
+
+export function createSupportComposer(prisma: PrismaService): Composer<BotContext> {
+  const composer = new Composer<BotContext>();
+
+  async function supportFlow(conversation: SupportConversation, ctx: BotContext) {
+    if (!ctx.user) return;
+
+    const lang = ctx.user.language;
+
+    await ctx.reply(ctx.t('support_new'));
+
+    const msgCtx = await conversation.wait();
+
+    if (!msgCtx.message?.text) {
+      await ctx.reply(ctx.t('support_new'));
+      return;
+    }
+
+    const userMessage = msgCtx.message.text.trim();
+
+    try {
+      const ticket = await prisma.supportTicket.create({
+        data: {
+          userId: ctx.user.id,
+          subject: userMessage.substring(0, 100),
+          status: 'OPEN',
+          messages: {
+            create: {
+              senderId: ctx.user.id,
+              isAdmin: false,
+              message: userMessage,
+            },
+          },
+        },
+      });
+
+      await ctx.reply(ctx.t('support_sent'), {
+        reply_markup: mainMenuKeyboard(lang),
+      });
+
+      logger.log(`Support ticket created: id=${ticket.id}, userId=${ctx.user.id}`);
+    } catch (error) {
+      logger.error(`Support ticket creation failed: ${error}`);
+      await ctx.reply(ctx.t('order_status_failed'));
+    }
+  }
+
+  composer.use(createConversation(supportFlow, 'support-flow'));
+
+  return composer;
+}
+
+export async function showSupport(ctx: BotContext): Promise<void> {
+  await ctx.conversation.enter('support-flow');
+}
