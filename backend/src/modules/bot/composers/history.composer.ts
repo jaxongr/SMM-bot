@@ -1,7 +1,6 @@
 import { Composer } from 'grammy';
 import { Logger } from '@nestjs/common';
 import { BotContext } from '../types/context.type';
-import { paginationKeyboard } from '../keyboards/inline.keyboard';
 import { formatPrice, formatDate, formatOrderStatus } from '../utils/format-message';
 import { PrismaService } from '../../../prisma/prisma.service';
 
@@ -9,13 +8,20 @@ const logger = new Logger('HistoryComposer');
 
 const ORDERS_PER_PAGE = 5;
 
+const PLATFORM_ICONS: Record<string, string> = {
+  TELEGRAM: '📱',
+  INSTAGRAM: '📸',
+};
+
+const NUM_EMOJIS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
+
 export function createHistoryComposer(prisma: PrismaService): Composer<BotContext> {
   const composer = new Composer<BotContext>();
 
   // Pagination callback
   composer.callbackQuery(/^orders_page:(\d+)$/, async (ctx) => {
     const page = parseInt(ctx.match[1], 10);
-    await showOrders(ctx, prisma, page);
+    await showOrders(ctx, prisma, page, true);
     await ctx.answerCallbackQuery();
   });
 
@@ -29,7 +35,12 @@ export function createHistoryComposer(prisma: PrismaService): Composer<BotContex
   return composer;
 }
 
-export async function showOrders(ctx: BotContext, prisma: PrismaService, page = 1): Promise<void> {
+export async function showOrders(
+  ctx: BotContext,
+  prisma: PrismaService,
+  page = 1,
+  editMessage = false,
+): Promise<void> {
   if (!ctx.user) return;
 
   const lang = ctx.user.language;
@@ -42,55 +53,86 @@ export async function showOrders(ctx: BotContext, prisma: PrismaService, page = 
       take: ORDERS_PER_PAGE,
       orderBy: { createdAt: 'desc' },
       include: {
-        service: { select: { name: true } },
+        service: { select: { name: true, category: { select: { platform: true } } } },
       },
     }),
     prisma.order.count({ where: { userId: ctx.user.id } }),
   ]);
 
   if (orders.length === 0) {
-    await ctx.reply(ctx.t('no_orders'));
+    await ctx.reply(ctx.t('no_orders'), { parse_mode: 'HTML' });
     return;
   }
 
   const totalPages = Math.ceil(total / ORDERS_PER_PAGE);
 
-  let text = `${ctx.t('my_orders')} (${total}):\n\n`;
+  let text = ctx.t('orders_title', { total });
 
-  for (const order of orders) {
-    const serviceName = (order.service.name as Record<string, string>)[lang] ||
-      (order.service.name as Record<string, string>)['uz'] || 'Unknown';
+  for (let i = 0; i < orders.length; i++) {
+    const order = orders[i];
+    const serviceName =
+      (order.service.name as Record<string, string>)[lang] ||
+      (order.service.name as Record<string, string>)['uz'] ||
+      'Unknown';
     const status = formatOrderStatus(order.status, lang);
+    const platform = (order.service.category as { platform?: string })?.platform || 'TELEGRAM';
+    const icon = PLATFORM_ICONS[platform] || '📦';
+    const shortId = order.id.slice(-6).toUpperCase();
+    const date = formatDate(order.createdAt).split(' ')[0];
+    const num = NUM_EMOJIS[i] || String(i + 1);
 
-    text += `#${order.id.slice(-6)} | ${serviceName}\n`;
-    text += `${status} | ${formatPrice(Number(order.totalPrice))}\n`;
-    text += `${formatDate(order.createdAt)}\n\n`;
+    text += ctx.t('orders_item', {
+      num,
+      id: shortId,
+      status,
+      icon,
+      service: serviceName,
+      quantity: order.quantity,
+      price: formatPrice(Number(order.totalPrice)),
+      date,
+    });
+  }
+
+  if (totalPages > 1) {
+    text += ctx.t('orders_page', { page, totalPages });
   }
 
   const { InlineKeyboard } = await import('grammy');
   const keyboard = new InlineKeyboard();
 
   for (const order of orders) {
-    const shortId = order.id.slice(-6);
-    keyboard.text(`#${shortId}`, `order:detail:${order.id}`).row();
+    const shortId = order.id.slice(-6).toUpperCase();
+    keyboard.text(`🔍 #${shortId}`, `order:detail:${order.id}`).row();
   }
 
   if (totalPages > 1) {
-    const pagination = paginationKeyboard(page, totalPages, 'orders_page');
-    // Merge pagination into the keyboard
     if (page > 1) {
-      keyboard.text('\u25c0\ufe0f', `orders_page:${page - 1}`);
+      keyboard.text('◀️', `orders_page:${page - 1}`);
     }
     keyboard.text(`${page}/${totalPages}`, 'noop');
     if (page < totalPages) {
-      keyboard.text('\u25b6\ufe0f', `orders_page:${page + 1}`);
+      keyboard.text('▶️', `orders_page:${page + 1}`);
     }
   }
 
-  await ctx.reply(text, { reply_markup: keyboard });
+  const replyOptions = { parse_mode: 'HTML' as const, reply_markup: keyboard };
+
+  if (editMessage) {
+    try {
+      await ctx.editMessageText(text, replyOptions);
+    } catch {
+      await ctx.reply(text, replyOptions);
+    }
+  } else {
+    await ctx.reply(text, replyOptions);
+  }
 }
 
-async function showOrderDetail(ctx: BotContext, prisma: PrismaService, orderId: string): Promise<void> {
+async function showOrderDetail(
+  ctx: BotContext,
+  prisma: PrismaService,
+  orderId: string,
+): Promise<void> {
   if (!ctx.user) return;
 
   const lang = ctx.user.language;
@@ -103,35 +145,45 @@ async function showOrderDetail(ctx: BotContext, prisma: PrismaService, orderId: 
   });
 
   if (!order || order.userId !== ctx.user.id) {
-    await ctx.reply(ctx.t('no_orders'));
+    await ctx.reply(ctx.t('no_orders'), { parse_mode: 'HTML' });
     return;
   }
 
-  const serviceName = (order.service.name as Record<string, string>)[lang] ||
-    (order.service.name as Record<string, string>)['uz'] || 'Unknown';
+  const serviceName =
+    (order.service.name as Record<string, string>)[lang] ||
+    (order.service.name as Record<string, string>)['uz'] ||
+    'Unknown';
   const status = formatOrderStatus(order.status, lang);
+  const shortId = order.id.slice(-6).toUpperCase();
 
-  let text = `\ud83d\udccb Order #${order.id.slice(-6)}\n\n`;
-  text += `\ud83d\udd27 ${serviceName}\n`;
-  text += `\ud83d\udd17 ${order.link}\n`;
-  text += `\ud83d\udd22 ${order.quantity}\n`;
-  text += `\ud83d\udcb0 ${formatPrice(Number(order.totalPrice))}\n`;
-  text += `\ud83d\udcca ${status}\n`;
-  text += `\ud83d\udcc5 ${formatDate(order.createdAt)}\n`;
-
+  let extra = '';
   if (order.startCount !== null) {
-    text += `\n\u25b6\ufe0f Start: ${order.startCount}`;
+    extra += ctx.t('order_detail_start', { count: order.startCount });
   }
   if (order.currentCount !== null) {
-    text += `\n\ud83d\udcca Current: ${order.currentCount}`;
+    extra += ctx.t('order_detail_current', { count: order.currentCount });
   }
   if (order.remains !== null) {
-    text += `\n\u23f3 Remains: ${order.remains}`;
+    extra += ctx.t('order_detail_remains', { count: order.remains });
   }
 
-  const { InlineKeyboard } = await import('grammy');
-  const keyboard = new InlineKeyboard()
-    .text(ctx.t('back'), 'orders_page:1');
+  const text = ctx.t('order_detail', {
+    id: shortId,
+    service: serviceName,
+    link: order.link,
+    quantity: order.quantity,
+    price: formatPrice(Number(order.totalPrice)),
+    status,
+    date: formatDate(order.createdAt),
+    extra,
+  });
 
-  await ctx.editMessageText(text, { reply_markup: keyboard });
+  const { InlineKeyboard } = await import('grammy');
+  const keyboard = new InlineKeyboard().text(ctx.t('back'), 'orders_page:1');
+
+  try {
+    await ctx.editMessageText(text, { parse_mode: 'HTML', reply_markup: keyboard });
+  } catch {
+    await ctx.reply(text, { parse_mode: 'HTML', reply_markup: keyboard });
+  }
 }

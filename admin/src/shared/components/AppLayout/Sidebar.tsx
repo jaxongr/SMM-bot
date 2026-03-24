@@ -11,18 +11,22 @@ import {
   SettingOutlined,
   BellOutlined,
   CustomerServiceOutlined,
+  PhoneOutlined,
+  GiftOutlined,
 } from '@ant-design/icons';
 
 const menuItems = [
   { key: '/', icon: <DashboardOutlined />, label: 'Dashboard' },
   { key: '/users', icon: <UserOutlined />, label: 'Foydalanuvchilar' },
   { key: '/services', icon: <AppstoreOutlined />, label: 'Xizmatlar' },
+  { key: '/sms', icon: <PhoneOutlined />, label: 'SMS Aktivatsiya' },
   { key: '/orders', icon: <ShoppingCartOutlined />, label: 'Buyurtmalar' },
   { key: '/payments', icon: <WalletOutlined />, label: "To'lovlar" },
   { key: '/providers', icon: <ApiOutlined />, label: 'Provayderlar' },
   { key: '/statistics', icon: <BarChartOutlined />, label: 'Statistika' },
   { key: '/settings', icon: <SettingOutlined />, label: 'Sozlamalar' },
   { key: '/notifications', icon: <BellOutlined />, label: 'Bildirishnomalar' },
+  { key: '/promo', icon: <GiftOutlined />, label: 'Promo kodlar' },
   { key: '/support', icon: <CustomerServiceOutlined />, label: "Qo'llab-quvvatlash" },
 ];
 

@@ -8,25 +8,33 @@ function getMenuLabels(key: string): string[] {
   return SUPPORTED_LANGUAGES.map((lang) => translate(key, lang));
 }
 
-export function createMenuComposer(handlers: {
+export interface MenuHandlers {
+  onSms: (ctx: BotContext) => Promise<void>;
   onServices: (ctx: BotContext) => Promise<void>;
   onOrders: (ctx: BotContext) => Promise<void>;
-  onBalance: (ctx: BotContext) => Promise<void>;
-  onProfile: (ctx: BotContext) => Promise<void>;
   onReferral: (ctx: BotContext) => Promise<void>;
+  onBalance: (ctx: BotContext) => Promise<void>;
+  onPayment: (ctx: BotContext) => Promise<void>;
+  onGuide: (ctx: BotContext) => Promise<void>;
   onSupport: (ctx: BotContext) => Promise<void>;
-  onLanguage: (ctx: BotContext) => Promise<void>;
-}): Composer<BotContext> {
+  onPartnership: (ctx: BotContext) => Promise<void>;
+  onDiscount: (ctx: BotContext) => Promise<void>;
+}
+
+export function createMenuComposer(handlers: MenuHandlers): Composer<BotContext> {
   const composer = new Composer<BotContext>();
 
   const menuItems: Array<{ key: string; handler: (ctx: BotContext) => Promise<void> }> = [
-    { key: 'services', handler: handlers.onServices },
-    { key: 'my_orders', handler: handlers.onOrders },
-    { key: 'balance', handler: handlers.onBalance },
-    { key: 'profile', handler: handlers.onProfile },
-    { key: 'referral', handler: handlers.onReferral },
-    { key: 'support', handler: handlers.onSupport },
-    { key: 'language', handler: handlers.onLanguage },
+    { key: 'menu_sms', handler: handlers.onSms },
+    { key: 'menu_services', handler: handlers.onServices },
+    { key: 'menu_orders', handler: handlers.onOrders },
+    { key: 'menu_referral', handler: handlers.onReferral },
+    { key: 'menu_balance', handler: handlers.onBalance },
+    { key: 'menu_payment', handler: handlers.onPayment },
+    { key: 'menu_guide', handler: handlers.onGuide },
+    { key: 'menu_support', handler: handlers.onSupport },
+    { key: 'menu_partnership', handler: handlers.onPartnership },
+    { key: 'menu_discount', handler: handlers.onDiscount },
   ];
 
   for (const item of menuItems) {

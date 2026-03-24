@@ -4,6 +4,7 @@ import { ConversationFlavor } from '@grammyjs/conversations';
 export interface SessionData {
   language: string;
   userId?: string;
+  smsService?: string;
 }
 
 export interface BotUserData {

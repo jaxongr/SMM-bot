@@ -17,12 +17,12 @@ export function createSupportComposer(prisma: PrismaService): Composer<BotContex
 
     const lang = ctx.user.language;
 
-    await ctx.reply(ctx.t('support_new'));
+    await ctx.reply(ctx.t('support_new'), { parse_mode: 'HTML' });
 
     const msgCtx = await conversation.wait();
 
     if (!msgCtx.message?.text) {
-      await ctx.reply(ctx.t('support_new'));
+      await ctx.reply(ctx.t('support_new'), { parse_mode: 'HTML' });
       return;
     }
 
@@ -45,13 +45,14 @@ export function createSupportComposer(prisma: PrismaService): Composer<BotContex
       });
 
       await ctx.reply(ctx.t('support_sent'), {
+        parse_mode: 'HTML',
         reply_markup: mainMenuKeyboard(lang),
       });
 
       logger.log(`Support ticket created: id=${ticket.id}, userId=${ctx.user.id}`);
     } catch (error) {
       logger.error(`Support ticket creation failed: ${error}`);
-      await ctx.reply(ctx.t('order_status_failed'));
+      await ctx.reply(ctx.t('order_status_failed'), { parse_mode: 'HTML' });
     }
   }
 

@@ -34,9 +34,12 @@ export function createLanguageComposer(prisma: PrismaService): Composer<BotConte
       ctx.user.language = language;
       ctx.session.language = language;
 
-      await ctx.editMessageText(ctx.t('language_changed'));
+      await ctx.editMessageText(ctx.t('language_changed'), {
+        parse_mode: 'HTML',
+      });
 
       await ctx.reply(ctx.t('main_menu'), {
+        parse_mode: 'HTML',
         reply_markup: mainMenuKeyboard(language),
       });
 
@@ -52,7 +55,8 @@ export function createLanguageComposer(prisma: PrismaService): Composer<BotConte
 }
 
 export async function showLanguage(ctx: BotContext): Promise<void> {
-  await ctx.reply(ctx.t('language'), {
+  await ctx.reply(ctx.t('language_select'), {
+    parse_mode: 'HTML',
     reply_markup: languageKeyboard(),
   });
 }

@@ -13,7 +13,7 @@ export function createServicesComposer(
 ): Composer<BotContext> {
   const composer = new Composer<BotContext>();
 
-  // Show platform selection
+  // Show categories for a platform
   composer.callbackQuery(/^platform:(.+)$/, async (ctx) => {
     const platform = ctx.match[1];
     const lang = ctx.user?.language || 'uz';
@@ -33,9 +33,16 @@ export function createServicesComposer(
         return;
       }
 
-      await ctx.editMessageText(ctx.t('select_category'), {
-        reply_markup: categoryKeyboard(categories, lang),
-      });
+      const platformIcon = platform === 'TELEGRAM' ? '📱' : '📸';
+      const platformName = platform === 'TELEGRAM' ? 'Telegram' : 'Instagram';
+
+      await ctx.editMessageText(
+        `${platformIcon} <b>${platformName}</b>\n\n${ctx.t('select_category')}`,
+        {
+          parse_mode: 'HTML',
+          reply_markup: categoryKeyboard(categories, lang),
+        },
+      );
     } catch (error) {
       logger.error(`Error loading categories: ${error}`);
       await ctx.answerCallbackQuery({ text: 'Error loading categories' });
@@ -55,7 +62,7 @@ export function createServicesComposer(
       const services = result.data.map((svc) => ({
         id: svc.id,
         name: svc.name as Record<string, string>,
-        pricePerUnit: svc.pricePerUnit,
+        pricePerUnit: Number(svc.pricePerUnit),
       }));
 
       if (services.length === 0) {
@@ -63,13 +70,9 @@ export function createServicesComposer(
         return;
       }
 
-      const formattedServices = services.map((s) => ({
-        id: s.id,
-        name: s.name as Record<string, string>,
-        pricePerUnit: Number(s.pricePerUnit),
-      }));
       await ctx.editMessageText(ctx.t('select_service'), {
-        reply_markup: serviceKeyboard(formattedServices, lang),
+        parse_mode: 'HTML',
+        reply_markup: serviceKeyboard(services, lang),
       });
     } catch (error) {
       logger.error(`Error loading services: ${error}`);
@@ -83,15 +86,17 @@ export function createServicesComposer(
   composer.callbackQuery('back:platforms', async (ctx) => {
     const lang = ctx.user?.language || 'uz';
     await ctx.editMessageText(ctx.t('select_platform'), {
+      parse_mode: 'HTML',
       reply_markup: platformKeyboard(lang),
     });
     await ctx.answerCallbackQuery();
   });
 
-  // Back to categories — need platform context, go back to platform selection
+  // Back to categories — go back to platform selection
   composer.callbackQuery('back:categories', async (ctx) => {
     const lang = ctx.user?.language || 'uz';
     await ctx.editMessageText(ctx.t('select_platform'), {
+      parse_mode: 'HTML',
       reply_markup: platformKeyboard(lang),
     });
     await ctx.answerCallbackQuery();
@@ -103,6 +108,7 @@ export function createServicesComposer(
 export async function showPlatforms(ctx: BotContext): Promise<void> {
   const lang = ctx.user?.language || 'uz';
   await ctx.reply(ctx.t('select_platform'), {
+    parse_mode: 'HTML',
     reply_markup: platformKeyboard(lang),
   });
 }

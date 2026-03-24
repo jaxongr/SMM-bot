@@ -22,8 +22,6 @@ export function createOrderComposer(
   const composer = new Composer<BotContext>();
 
   async function orderFlow(conversation: OrderConversation, ctx: BotContext) {
-    const serviceId = ctx.session.userId; // Will be set before entering conversation
-    // Get service ID from callback data
     const callbackData = ctx.callbackQuery?.data;
     if (!callbackData) return;
 
@@ -43,7 +41,7 @@ export function createOrderComposer(
     const platform = (service.category as { platform?: string })?.platform || 'TELEGRAM';
 
     // Step 1: Ask for link
-    await ctx.reply(ctx.t('enter_link'));
+    await ctx.reply(ctx.t('enter_link'), { parse_mode: 'HTML' });
 
     let link = '';
     let validLink = false;
@@ -52,14 +50,14 @@ export function createOrderComposer(
       const linkCtx = await conversation.wait();
 
       if (!linkCtx.message?.text) {
-        await linkCtx.reply(ctx.t('invalid_link'));
+        await linkCtx.reply(ctx.t('invalid_link'), { parse_mode: 'HTML' });
         continue;
       }
 
       link = linkCtx.message.text.trim();
 
       if (!isValidLink(link, platform)) {
-        await linkCtx.reply(ctx.t('invalid_link'));
+        await linkCtx.reply(ctx.t('invalid_link'), { parse_mode: 'HTML' });
         continue;
       }
 
@@ -70,7 +68,9 @@ export function createOrderComposer(
     const minQty = service.minQuantity;
     const maxQty = service.maxQuantity;
 
-    await ctx.reply(ctx.t('enter_quantity', { min: minQty, max: maxQty }));
+    await ctx.reply(ctx.t('enter_quantity', { min: minQty, max: maxQty }), {
+      parse_mode: 'HTML',
+    });
 
     let quantity = 0;
     let validQuantity = false;
@@ -79,14 +79,18 @@ export function createOrderComposer(
       const qtyCtx = await conversation.wait();
 
       if (!qtyCtx.message?.text) {
-        await qtyCtx.reply(ctx.t('invalid_quantity', { min: minQty, max: maxQty }));
+        await qtyCtx.reply(ctx.t('invalid_quantity', { min: minQty, max: maxQty }), {
+          parse_mode: 'HTML',
+        });
         continue;
       }
 
       const parsed = parseInt(qtyCtx.message.text.trim(), 10);
 
       if (isNaN(parsed) || parsed < minQty || parsed > maxQty) {
-        await qtyCtx.reply(ctx.t('invalid_quantity', { min: minQty, max: maxQty }));
+        await qtyCtx.reply(ctx.t('invalid_quantity', { min: minQty, max: maxQty }), {
+          parse_mode: 'HTML',
+        });
         continue;
       }
 
@@ -98,8 +102,10 @@ export function createOrderComposer(
     const pricePerUnit = Number(service.pricePerUnit);
     const totalPrice = pricePerUnit * quantity;
     const userBalance = ctx.user?.balance || 0;
-    const serviceName = (service.name as Record<string, string>)[lang] ||
-      (service.name as Record<string, string>)['uz'] || 'Unknown';
+    const serviceName =
+      (service.name as Record<string, string>)[lang] ||
+      (service.name as Record<string, string>)['uz'] ||
+      'Unknown';
 
     await ctx.reply(
       ctx.t('order_summary', {
@@ -109,7 +115,10 @@ export function createOrderComposer(
         price: formatPrice(totalPrice),
         balance: formatPrice(userBalance),
       }),
-      { reply_markup: confirmKeyboard(lang) },
+      {
+        parse_mode: 'HTML',
+        reply_markup: confirmKeyboard(lang),
+      },
     );
 
     // Step 4: Wait for confirmation
@@ -119,7 +128,7 @@ export function createOrderComposer(
     ]);
 
     if (confirmCtx.callbackQuery.data === 'order:cancel') {
-      await confirmCtx.editMessageText(ctx.t('cancel'));
+      await confirmCtx.editMessageText(ctx.t('cancel'), { parse_mode: 'HTML' });
       return;
     }
 
@@ -130,6 +139,7 @@ export function createOrderComposer(
           required: formatPrice(totalPrice),
           balance: formatPrice(userBalance),
         }),
+        { parse_mode: 'HTML' },
       );
       return;
     }
@@ -154,17 +164,21 @@ export function createOrderComposer(
         },
       });
 
-      await confirmCtx.editMessageText(ctx.t('order_created', { orderId: order.id }));
+      await confirmCtx.editMessageText(
+        ctx.t('order_created', { orderId: order.id.slice(-6).toUpperCase() }),
+        { parse_mode: 'HTML' },
+      );
 
       // Show main menu
       await ctx.reply(ctx.t('main_menu'), {
+        parse_mode: 'HTML',
         reply_markup: mainMenuKeyboard(lang),
       });
 
       logger.log(`Order created: id=${order.id}, userId=${ctx.user!.id}, serviceId=${svcId}`);
     } catch (error) {
       logger.error(`Order creation failed: ${error}`);
-      await confirmCtx.editMessageText(ctx.t('order_status_failed'));
+      await confirmCtx.editMessageText(ctx.t('order_status_failed'), { parse_mode: 'HTML' });
     }
   }
 

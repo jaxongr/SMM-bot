@@ -15,6 +15,10 @@ import { createReferralComposer, showReferral } from './composers/referral.compo
 import { createProfileComposer, showProfile } from './composers/profile.composer';
 import { createSupportComposer, showSupport } from './composers/support.composer';
 import { createLanguageComposer, showLanguage } from './composers/language.composer';
+import { createSmsComposer, showSmsServices } from './composers/sms.composer';
+import { createGuideComposer, showGuide } from './composers/guide.composer';
+import { createPartnershipComposer, showPartnership } from './composers/partnership.composer';
+import { createDiscountComposer, showDiscount } from './composers/discount.composer';
 import { UsersService } from '../users/users.service';
 import { CategoriesService } from '../services/categories.service';
 import { ServicesService } from '../services/services.service';
@@ -74,6 +78,9 @@ export class BotService implements OnModuleInit, OnModuleDestroy {
     // Start command
     this.bot.use(createStartComposer(this.usersService));
 
+    // SMS activation
+    this.bot.use(createSmsComposer(this.prisma, this.balanceService));
+
     // Service browsing
     this.bot.use(createServicesComposer(this.categoriesService, this.servicesService));
 
@@ -81,7 +88,7 @@ export class BotService implements OnModuleInit, OnModuleDestroy {
     this.bot.use(createOrderComposer(this.servicesService, this.prisma, this.balanceService));
 
     // Balance and topup flow
-    this.bot.use(createBalanceComposer(this.balanceService, this.paymentsService));
+    this.bot.use(createBalanceComposer(this.balanceService, this.paymentsService, this.prisma));
 
     // Order history
     this.bot.use(createHistoryComposer(this.prisma));
@@ -98,16 +105,28 @@ export class BotService implements OnModuleInit, OnModuleDestroy {
     // Language
     this.bot.use(createLanguageComposer(this.prisma));
 
+    // Guide
+    this.bot.use(createGuideComposer());
+
+    // Partnership
+    this.bot.use(createPartnershipComposer(this.prisma));
+
+    // Discount (with conversations)
+    this.bot.use(createDiscountComposer(this.prisma, this.balanceService));
+
     // Menu composer — routes text button presses to handlers (must be last)
     this.bot.use(
       createMenuComposer({
+        onSms: async (ctx) => showSmsServices(ctx),
         onServices: async (ctx) => showPlatforms(ctx),
         onOrders: async (ctx) => showOrders(ctx, this.prisma),
-        onBalance: async (ctx) => showBalance(ctx, this.balanceService),
-        onProfile: async (ctx) => showProfile(ctx, this.prisma),
         onReferral: async (ctx) => showReferral(ctx, this.prisma, this.configService),
+        onBalance: async (ctx) => showBalance(ctx, this.balanceService, this.prisma),
+        onPayment: async (ctx) => showBalance(ctx, this.balanceService, this.prisma),
+        onGuide: async (ctx) => showGuide(ctx),
         onSupport: async (ctx) => showSupport(ctx),
-        onLanguage: async (ctx) => showLanguage(ctx),
+        onPartnership: async (ctx) => showPartnership(ctx),
+        onDiscount: async (ctx) => showDiscount(ctx),
       }),
     );
   }
@@ -178,7 +197,10 @@ export class BotService implements OnModuleInit, OnModuleDestroy {
     }
 
     try {
-      await this.bot.api.sendMessage(Number(telegramId), text, options);
+      await this.bot.api.sendMessage(Number(telegramId), text, {
+        parse_mode: 'HTML',
+        ...options,
+      });
     } catch (error) {
       this.logger.error(`Failed to send message to ${telegramId}: ${error}`);
     }

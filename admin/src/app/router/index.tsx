@@ -15,6 +15,8 @@ const StatisticsPage = React.lazy(() => import('@/features/statistics'));
 const SettingsPage = React.lazy(() => import('@/features/settings'));
 const NotificationsPage = React.lazy(() => import('@/features/notifications'));
 const SupportPage = React.lazy(() => import('@/features/support'));
+const SmsPage = React.lazy(() => import('@/features/sms'));
+const PromoPage = React.lazy(() => import('@/features/promo'));
 
 const LazyFallback = (
   <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}>
@@ -104,6 +106,22 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={LazyFallback}>
             <SupportPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'sms',
+        element: (
+          <Suspense fallback={LazyFallback}>
+            <SmsPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'promo',
+        element: (
+          <Suspense fallback={LazyFallback}>
+            <PromoPage />
           </Suspense>
         ),
       },

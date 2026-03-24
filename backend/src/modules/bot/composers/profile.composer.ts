@@ -32,11 +32,12 @@ export async function showProfile(ctx: BotContext, prisma: PrismaService): Promi
 
   await ctx.reply(
     ctx.t('profile_info', {
-      id: user.id.slice(-8),
+      id: user.id.slice(-8).toUpperCase(),
       name,
       balance: formatPrice(Number(user.balance)),
       orders: orderCount,
       date: formatDate(user.createdAt),
     }),
+    { parse_mode: 'HTML' },
   );
 }

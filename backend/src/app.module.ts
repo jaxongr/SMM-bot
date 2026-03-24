@@ -21,6 +21,8 @@ import { StatisticsModule } from './modules/statistics/statistics.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { QueueModule } from './modules/queue/queue.module';
 import { HealthModule } from './modules/health/health.module';
+import { SmsModule } from './modules/sms/sms.module';
+import { PromoModule } from './modules/promo/promo.module';
 
 @Module({
   imports: [
@@ -61,6 +63,8 @@ import { HealthModule } from './modules/health/health.module';
     SettingsModule,
     QueueModule,
     HealthModule,
+    SmsModule,
+    PromoModule,
   ],
 })
 export class AppModule {}

@@ -1,6 +1,7 @@
 import { Composer } from 'grammy';
 import { Logger } from '@nestjs/common';
 import { BotContext } from '../types/context.type';
+import { referralKeyboard } from '../keyboards/inline.keyboard';
 import { formatPrice } from '../utils/format-message';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
@@ -15,7 +16,12 @@ export function createReferralComposer(
 ): Composer<BotContext> {
   const composer = new Composer<BotContext>();
 
-  // No specific callback queries for referral, it's handled via menu composer
+  // Back to menu from referral
+  composer.callbackQuery('back:menu', async (ctx) => {
+    // Handled by other composers or ignored
+    await ctx.answerCallbackQuery();
+  });
+
   return composer;
 }
 
@@ -43,10 +49,15 @@ export async function showReferral(
     }),
   ]);
 
-  const botToken = configService.get<string>('telegram.botToken', '');
-  const botUsername = botToken ? '' : 'bot'; // Will be set dynamically
-  const referralLink = `https://t.me/${botUsername}?start=${user.referralCode}`;
+  let botUsername = 'SMM_chibot';
+  try {
+    const me = await ctx.api.getMe();
+    botUsername = me.username || botUsername;
+  } catch {
+    // Use default
+  }
 
+  const referralLink = `https://t.me/${botUsername}?start=${user.referralCode}`;
   const earned = Number(referralEarnings._sum.earnedAmount || 0);
 
   await ctx.reply(
@@ -56,5 +67,9 @@ export async function showReferral(
       earned: formatPrice(earned),
       percentage: DEFAULT_REFERRAL_PERCENTAGE,
     }),
+    {
+      parse_mode: 'HTML',
+      reply_markup: referralKeyboard(lang, referralLink),
+    },
   );
 }
