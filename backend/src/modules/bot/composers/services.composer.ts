@@ -63,8 +63,9 @@ export function createServicesComposer(
         return;
       }
 
-      const formattedServices = services.map((s: Record<string, unknown>) => ({
-        ...s,
+      const formattedServices = services.map((s) => ({
+        id: s.id,
+        name: s.name as Record<string, string>,
         pricePerUnit: Number(s.pricePerUnit),
       }));
       await ctx.editMessageText(ctx.t('select_service'), {

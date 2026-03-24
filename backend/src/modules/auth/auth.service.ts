@@ -38,7 +38,7 @@ export class AuthService implements OnModuleDestroy {
   ) {
     const redisUrl = this.configService.get<string>('redis.url', 'redis://localhost:6379');
     this.redis = new Redis(redisUrl);
-    this.refreshSecret = this.configService.get<string>('jwt.refreshSecret');
+    this.refreshSecret = this.configService.get<string>('jwt.refreshSecret') || 'fallback-refresh';
     this.refreshExpiration = this.configService.get<string>('jwt.refreshExpiration', '7d');
   }
 
@@ -200,7 +200,7 @@ export class AuthService implements OnModuleDestroy {
       this.jwtService.signAsync(payload),
       this.jwtService.signAsync(payload, {
         secret: this.refreshSecret,
-        expiresIn: this.refreshExpiration,
+        expiresIn: this.refreshExpiration as unknown as number,
       }),
     ]);
 
