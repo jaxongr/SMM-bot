@@ -103,8 +103,8 @@ export class AuthService implements OnModuleDestroy {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Retrieve stored password hash from Redis
-    const storedHash = await this.redis.get(`admin_password:${user.id}`);
+    // Check password from DB field first, then Redis fallback
+    const storedHash = user.password || (await this.redis.get(`admin_password:${user.id}`));
 
     if (!storedHash) {
       throw new UnauthorizedException('Invalid credentials');
