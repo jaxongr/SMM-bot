@@ -114,7 +114,7 @@ async function main() {
       catSlug: 'tg-premium-boost',
       name: { uz: '❤️ Story Likes', ru: '❤️ Лайки историй', en: '❤️ Story Likes' },
       desc: {
-        uz: '❤️ Story'ga layklar\n⏱ Darhol',
+        uz: '❤️ Story layklar\n⏱ Darhol',
         ru: '❤️ Лайки на истории\n⏱ Моментально',
         en: '❤️ Story likes\n⏱ Instant',
       },
