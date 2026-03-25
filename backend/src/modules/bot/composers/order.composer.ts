@@ -182,13 +182,57 @@ export function createOrderComposer(
       session.orderServiceId = undefined;
       session.orderLink = undefined;
 
+      // Send to provider automatically
+      let providerStatus = '⏳ Kutilmoqda';
+      try {
+        const mapping = await prisma.serviceProviderMapping.findFirst({
+          where: { serviceId, isActive: true },
+          include: { providerService: true, provider: true },
+          orderBy: { priority: 'desc' },
+        });
+
+        if (mapping && mapping.provider.isActive) {
+          const params = new URLSearchParams({
+            key: mapping.provider.apiKey,
+            action: 'add',
+            service: mapping.providerService.externalServiceId,
+            link,
+            quantity: quantity.toString(),
+          });
+
+          const resp = await fetch(mapping.provider.apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString(),
+          });
+          const apiResult = await resp.json() as Record<string, unknown>;
+
+          if (apiResult.order) {
+            await prisma.order.update({
+              where: { id: order.id },
+              data: {
+                status: 'PROCESSING',
+                providerId: mapping.provider.id,
+                providerOrderId: String(apiResult.order),
+              },
+            });
+            providerStatus = '🔄 Provayderga yuborildi';
+            logger.log(`Order sent to provider: orderId=${order.id}, providerOrderId=${apiResult.order}`);
+          } else {
+            logger.error(`Provider rejected order: ${JSON.stringify(apiResult)}`);
+          }
+        }
+      } catch (providerError) {
+        logger.error(`Provider send failed: ${providerError}`);
+      }
+
       await ctx.editMessageText(
         `<b>✅ Buyurtma yaratildi!</b>\n\n` +
         `🆔 Buyurtma: <code>#${order.id.slice(-6).toUpperCase()}</code>\n` +
         `🔧 Xizmat: ${name}\n` +
         `🔢 Miqdor: ${quantity.toLocaleString()}\n` +
         `💰 Narx: ${formatPrice(totalPrice)}\n` +
-        `📊 Holat: ⏳ Kutilmoqda\n\n` +
+        `📊 Holat: ${providerStatus}\n\n` +
         `⏱ O'rtacha bajarilish vaqti: 5-60 daqiqa`,
         { parse_mode: 'HTML' },
       );
