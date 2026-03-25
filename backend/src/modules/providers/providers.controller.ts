@@ -17,11 +17,12 @@ import { UpdateProviderDto } from './dto/update-provider.dto';
 import { CreateMappingDto } from './dto/create-mapping.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
 @ApiTags('Providers')
 @ApiBearerAuth()
 @Controller('providers')
-@UseGuards(RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN', 'SUPER_ADMIN')
 export class ProvidersController {
   constructor(

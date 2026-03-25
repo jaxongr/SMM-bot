@@ -8,12 +8,16 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { CustomValidationPipe } from './common/pipes/validation.pipe';
 import { createWinstonLogger } from './common/utils/logger';
+import { Reflector } from '@nestjs/core';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { RolesGuard } from './common/guards/roles.guard';
 
 async function bootstrap() {
   const logger = createWinstonLogger();
   const app = await NestFactory.create(AppModule, { logger });
 
   const configService = app.get(ConfigService);
+  const reflector = app.get(Reflector);
 
   app.use(helmet());
 
@@ -27,6 +31,7 @@ async function bootstrap() {
   app.useGlobalPipes(CustomValidationPipe);
   app.useGlobalFilters(new AllExceptionsFilter());
   app.useGlobalInterceptors(new TransformInterceptor(), new LoggingInterceptor());
+  app.useGlobalGuards(new JwtAuthGuard(reflector), new RolesGuard(reflector));
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('SMM Bot API')
