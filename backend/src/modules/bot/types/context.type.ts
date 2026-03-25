@@ -8,6 +8,10 @@ export interface SessionData {
   waitingPaymentAmount?: boolean;
   waitingPaymentReceipt?: boolean;
   pendingPaymentAmount?: number;
+  orderServiceId?: string;
+  orderLink?: string;
+  waitingOrderLink?: boolean;
+  waitingOrderQuantity?: boolean;
 }
 
 export interface BotUserData {

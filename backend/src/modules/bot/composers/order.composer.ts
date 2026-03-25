@@ -1,10 +1,7 @@
-import { Composer } from 'grammy';
+import { Composer, InlineKeyboard } from 'grammy';
 import { Logger } from '@nestjs/common';
-import { type Conversation, createConversation } from '@grammyjs/conversations';
 import { BotContext } from '../types/context.type';
-import { confirmKeyboard } from '../keyboards/inline.keyboard';
 import { mainMenuKeyboard } from '../keyboards/main-menu.keyboard';
-import { isValidLink } from '../utils/validate-link';
 import { formatPrice } from '../utils/format-message';
 import { t, getLang } from '../utils/i18n.helper';
 import { ServicesService } from '../../services/services.service';
@@ -13,8 +10,6 @@ import { BalanceService } from '../../balance/balance.service';
 
 const logger = new Logger('OrderComposer');
 
-type OrderConversation = Conversation<BotContext>;
-
 export function createOrderComposer(
   servicesService: ServicesService,
   prisma: PrismaService,
@@ -22,142 +17,159 @@ export function createOrderComposer(
 ): Composer<BotContext> {
   const composer = new Composer<BotContext>();
 
-  async function orderFlow(conversation: OrderConversation, ctx: BotContext) {
-    const callbackData = ctx.callbackQuery?.data;
-    if (!callbackData) return;
-
-    const svcId = callbackData.replace('service:', '');
-
-    let service: Awaited<ReturnType<typeof servicesService.findById>>['data'];
+  // User clicks "Buyurtma berish" button from service detail
+  composer.callbackQuery(/^order:(.+)$/, async (ctx) => {
+    const serviceId = ctx.match[1];
+    if (serviceId === 'confirm' || serviceId === 'cancel') return;
 
     try {
-      const result = await servicesService.findById(svcId);
-      service = result.data;
-    } catch {
-      await ctx.reply('Service not found');
-      return;
-    }
+      const result = await servicesService.findById(serviceId);
+      const svc = result.data;
+      const lang = getLang(ctx);
+      const name = (svc.name as Record<string, string>)[lang] ||
+        (svc.name as Record<string, string>)['uz'] || 'Xizmat';
 
-    const lang = getLang(ctx);
-    const platform = (service.category as { platform?: string })?.platform || 'TELEGRAM';
-
-    // Step 1: Ask for link
-    await ctx.reply(t(ctx, 'enter_link'), { parse_mode: 'HTML' });
-
-    let link = '';
-    let validLink = false;
-
-    while (!validLink) {
-      const linkCtx = await conversation.wait();
-
-      if (!linkCtx.message?.text) {
-        await linkCtx.reply(t(ctx, 'invalid_link'), { parse_mode: 'HTML' });
-        continue;
+      // Save service ID to session
+      if (ctx.session) {
+        ctx.session.orderServiceId = serviceId;
+        ctx.session.waitingOrderLink = true;
       }
 
-      link = linkCtx.message.text.trim();
-
-      if (!isValidLink(link, platform)) {
-        await linkCtx.reply(t(ctx, 'invalid_link'), { parse_mode: 'HTML' });
-        continue;
-      }
-
-      validLink = true;
-    }
-
-    // Step 2: Ask for quantity
-    const minQty = service.minQuantity;
-    const maxQty = service.maxQuantity;
-
-    await ctx.reply(t(ctx, 'enter_quantity', { min: minQty, max: maxQty }), {
-      parse_mode: 'HTML',
-    });
-
-    let quantity = 0;
-    let validQuantity = false;
-
-    while (!validQuantity) {
-      const qtyCtx = await conversation.wait();
-
-      if (!qtyCtx.message?.text) {
-        await qtyCtx.reply(t(ctx, 'invalid_quantity', { min: minQty, max: maxQty }), {
-          parse_mode: 'HTML',
-        });
-        continue;
-      }
-
-      const parsed = parseInt(qtyCtx.message.text.trim(), 10);
-
-      if (isNaN(parsed) || parsed < minQty || parsed > maxQty) {
-        await qtyCtx.reply(t(ctx, 'invalid_quantity', { min: minQty, max: maxQty }), {
-          parse_mode: 'HTML',
-        });
-        continue;
-      }
-
-      quantity = parsed;
-      validQuantity = true;
-    }
-
-    // Step 3: Calculate price and show summary
-    const pricePerUnit = Number(service.pricePerUnit);
-    const totalPrice = pricePerUnit * quantity;
-    const userBalance = ctx.user?.balance || 0;
-    const serviceName =
-      (service.name as Record<string, string>)[lang] ||
-      (service.name as Record<string, string>)['uz'] ||
-      'Unknown';
-
-    await ctx.reply(
-      t(ctx, 'order_summary', {
-        service: serviceName,
-        link,
-        quantity,
-        price: formatPrice(totalPrice),
-        balance: formatPrice(userBalance),
-      }),
-      {
-        parse_mode: 'HTML',
-        reply_markup: confirmKeyboard(lang),
-      },
-    );
-
-    // Step 4: Wait for confirmation
-    const confirmCtx = await conversation.waitForCallbackQuery([
-      'order:confirm',
-      'order:cancel',
-    ]);
-
-    if (confirmCtx.callbackQuery.data === 'order:cancel') {
-      await confirmCtx.editMessageText(t(ctx, 'cancel'), { parse_mode: 'HTML' });
-      return;
-    }
-
-    // Step 5: Check balance and create order
-    if (userBalance < totalPrice) {
-      await confirmCtx.editMessageText(
-        t(ctx, 'insufficient_balance', {
-          required: formatPrice(totalPrice),
-          balance: formatPrice(userBalance),
-        }),
+      await ctx.editMessageText(
+        `<b>🛒 Buyurtma: ${name}</b>\n\n` +
+        `💰 Narx: ${formatPrice(Number(svc.pricePerUnit) * 1000)} / 1000\n` +
+        `📦 Min: ${svc.minQuantity} | Max: ${svc.maxQuantity}\n\n` +
+        `🔗 <b>Kanal/guruh/profil linkini yuboring:</b>`,
         { parse_mode: 'HTML' },
+      );
+    } catch (error) {
+      logger.error(`Service not found: ${error}`);
+      await ctx.answerCallbackQuery({ text: 'Xizmat topilmadi' });
+    }
+    await ctx.answerCallbackQuery();
+  });
+
+  // Capture link
+  composer.on('message:text', async (ctx, next) => {
+    const session = ctx.session;
+    if (!session?.waitingOrderLink && !session?.waitingOrderQuantity) {
+      return next();
+    }
+
+    // Step 1: Capture link
+    if (session.waitingOrderLink) {
+      const link = ctx.message.text.trim();
+
+      if (!link.startsWith('http') && !link.startsWith('t.me') && !link.startsWith('@')) {
+        await ctx.reply('❌ Noto\'g\'ri link! Qaytadan kiriting:\n\nMasalan: <code>https://t.me/kanal_nomi</code>', { parse_mode: 'HTML' });
+        return;
+      }
+
+      session.waitingOrderLink = false;
+      session.orderLink = link;
+      session.waitingOrderQuantity = true;
+
+      const serviceId = session.orderServiceId as string;
+      try {
+        const result = await servicesService.findById(serviceId);
+        const svc = result.data;
+        await ctx.reply(
+          `🔗 Link: <code>${link}</code>\n\n` +
+          `🔢 <b>Miqdorni kiriting:</b>\n` +
+          `📦 Min: <b>${svc.minQuantity}</b> | Max: <b>${svc.maxQuantity.toLocaleString()}</b>`,
+          { parse_mode: 'HTML' },
+        );
+      } catch {
+        await ctx.reply('🔢 <b>Miqdorni kiriting:</b>', { parse_mode: 'HTML' });
+      }
+      return;
+    }
+
+    // Step 2: Capture quantity
+    if (session.waitingOrderQuantity) {
+      const qty = parseInt(ctx.message.text.replace(/\s/g, ''), 10);
+      const serviceId = session.orderServiceId as string;
+
+      let svc;
+      try {
+        const result = await servicesService.findById(serviceId);
+        svc = result.data;
+      } catch {
+        await ctx.reply('❌ Xizmat topilmadi');
+        session.waitingOrderQuantity = false;
+        return;
+      }
+
+      if (isNaN(qty) || qty < svc.minQuantity || qty > svc.maxQuantity) {
+        await ctx.reply(
+          `❌ Miqdor ${svc.minQuantity} dan ${svc.maxQuantity.toLocaleString()} gacha bo'lishi kerak!`,
+          { parse_mode: 'HTML' },
+        );
+        return;
+      }
+
+      session.waitingOrderQuantity = false;
+      const link = session.orderLink as string;
+      const lang = getLang(ctx);
+      const name = (svc.name as Record<string, string>)[lang] ||
+        (svc.name as Record<string, string>)['uz'] || 'Xizmat';
+      const totalPrice = Number(svc.pricePerUnit) * qty;
+      const userBalance = ctx.user?.balance || 0;
+
+      const keyboard = new InlineKeyboard()
+        .text('✅ Tasdiqlash', `confirm_order:${serviceId}:${qty}`)
+        .row()
+        .text('❌ Bekor qilish', 'cancel_order');
+
+      await ctx.reply(
+        `<b>📋 Buyurtma ma'lumotlari:</b>\n\n` +
+        `🔧 Xizmat: <b>${name}</b>\n` +
+        `🔗 Link: <code>${link}</code>\n` +
+        `🔢 Miqdor: <b>${qty.toLocaleString()}</b>\n` +
+        `💰 Narx: <b>${formatPrice(totalPrice)}</b>\n` +
+        `💳 Balans: <b>${formatPrice(userBalance)}</b>\n\n` +
+        (userBalance < totalPrice
+          ? `❌ <b>Balans yetarli emas!</b> ${formatPrice(totalPrice - userBalance)} yetmaydi.`
+          : `✅ Tasdiqlash uchun tugmani bosing:`),
+        { parse_mode: 'HTML', reply_markup: userBalance >= totalPrice ? keyboard : undefined },
       );
       return;
     }
 
+    return next();
+  });
+
+  // Confirm order
+  composer.callbackQuery(/^confirm_order:(.+):(\d+)$/, async (ctx) => {
+    const serviceId = ctx.match[1];
+    const quantity = parseInt(ctx.match[2], 10);
+    const link = ctx.session.orderLink as string;
+
+    if (!ctx.user || !link) {
+      await ctx.answerCallbackQuery({ text: 'Xatolik' });
+      return;
+    }
+
     try {
+      const result = await servicesService.findById(serviceId);
+      const svc = result.data;
+      const lang = getLang(ctx);
+      const name = (svc.name as Record<string, string>)[lang] ||
+        (svc.name as Record<string, string>)['uz'] || 'Xizmat';
+      const totalPrice = Number(svc.pricePerUnit) * quantity;
+
       // Deduct balance
       await balanceService.deduct(
-        ctx.user!.id,
+        ctx.user.id,
         totalPrice,
-        `Order for service: ${serviceName}`,
+        `Buyurtma: ${name} x${quantity}`,
       );
 
       // Create order
       const order = await prisma.order.create({
         data: {
-          userId: ctx.user!.id,
-          serviceId: svcId,
+          userId: ctx.user.id,
+          serviceId,
           link,
           quantity,
           totalPrice,
@@ -165,29 +177,48 @@ export function createOrderComposer(
         },
       });
 
-      await confirmCtx.editMessageText(
-        t(ctx, 'order_created', { orderId: order.id.slice(-6).toUpperCase() }),
+      // Clear session
+      const session = ctx.session;
+      session.orderServiceId = undefined;
+      session.orderLink = undefined;
+
+      await ctx.editMessageText(
+        `<b>✅ Buyurtma yaratildi!</b>\n\n` +
+        `🆔 Buyurtma: <code>#${order.id.slice(-6).toUpperCase()}</code>\n` +
+        `🔧 Xizmat: ${name}\n` +
+        `🔢 Miqdor: ${quantity.toLocaleString()}\n` +
+        `💰 Narx: ${formatPrice(totalPrice)}\n` +
+        `📊 Holat: ⏳ Kutilmoqda\n\n` +
+        `⏱ O'rtacha bajarilish vaqti: 5-60 daqiqa`,
         { parse_mode: 'HTML' },
       );
 
-      // Show main menu
       await ctx.reply(t(ctx, 'main_menu'), {
         parse_mode: 'HTML',
         reply_markup: mainMenuKeyboard(lang),
       });
 
-      logger.log(`Order created: id=${order.id}, userId=${ctx.user!.id}, serviceId=${svcId}`);
+      logger.log(`Order created: id=${order.id}, user=${ctx.user.id}, service=${serviceId}, qty=${quantity}`);
     } catch (error) {
-      logger.error(`Order creation failed: ${error}`);
-      await confirmCtx.editMessageText(t(ctx, 'order_status_failed'), { parse_mode: 'HTML' });
+      logger.error(`Order failed: ${error}`);
+      const errorMsg = String(error).includes('INSUFFICIENT')
+        ? '❌ Balans yetarli emas! Avval balansni to\'ldiring.'
+        : '❌ Buyurtma yaratishda xatolik. Qaytadan urinib ko\'ring.';
+      await ctx.editMessageText(errorMsg, { parse_mode: 'HTML' });
     }
-  }
+    await ctx.answerCallbackQuery();
+  });
 
-  composer.use(createConversation(orderFlow, 'order-flow'));
+  // Cancel order
+  composer.callbackQuery('cancel_order', async (ctx) => {
+    const session = ctx.session;
+    session.orderServiceId = undefined;
+    session.orderLink = undefined;
+    session.waitingOrderLink = false;
+    session.waitingOrderQuantity = false;
 
-  // When user selects a service, start the order conversation
-  composer.callbackQuery(/^service:(.+)$/, async (ctx) => {
-    await ctx.conversation.enter('order-flow');
+    await ctx.editMessageText('❌ Buyurtma bekor qilindi.', { parse_mode: 'HTML' });
+    await ctx.answerCallbackQuery();
   });
 
   return composer;
