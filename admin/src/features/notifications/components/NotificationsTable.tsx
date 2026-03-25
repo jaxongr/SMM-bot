@@ -1,16 +1,31 @@
 import { Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
-import type { Notification, NotificationTarget } from '../../../shared/types';
 
-const TARGET_COLORS: Record<NotificationTarget, string> = {
+const TARGET_COLORS: Record<string, string> = {
   ALL: 'blue',
   USER: 'green',
   ROLE: 'orange',
 };
 
+const TARGET_LABELS: Record<string, string> = {
+  ALL: 'Hammaga',
+  USER: 'Foydalanuvchi',
+  ROLE: 'Rol',
+};
+
+interface NotificationRow {
+  id: string;
+  title: Record<string, string> | string;
+  message: Record<string, string> | string;
+  targetType: string;
+  targetId?: string;
+  _count?: { recipients: number };
+  createdAt: string;
+}
+
 interface NotificationsTableProps {
-  data: Notification[];
+  data: NotificationRow[];
   loading: boolean;
   total: number;
   page: number;
@@ -26,20 +41,26 @@ const NotificationsTable: React.FC<NotificationsTableProps> = ({
   limit,
   onPageChange,
 }) => {
-  const columns: ColumnsType<Notification> = [
+  const columns: ColumnsType<NotificationRow> = [
     {
-      title: 'Title (UZ)',
-      dataIndex: 'titleUz',
-      key: 'titleUz',
+      title: 'Sarlavha (UZ)',
+      dataIndex: 'title',
+      key: 'title',
       ellipsis: true,
+      render: (title: Record<string, string> | string) => {
+        if (typeof title === 'string') return title;
+        return title?.uz || title?.ru || title?.en || '-';
+      },
     },
     {
-      title: 'Target',
-      dataIndex: 'target',
-      key: 'target',
-      render: (target: NotificationTarget, record: Notification) => (
+      title: 'Nishon',
+      dataIndex: 'targetType',
+      key: 'targetType',
+      render: (target: string, record: NotificationRow) => (
         <>
-          <Tag color={TARGET_COLORS[target]}>{target}</Tag>
+          <Tag color={TARGET_COLORS[target] || 'default'}>
+            {TARGET_LABELS[target] || target}
+          </Tag>
           {record.targetId && (
             <span style={{ fontSize: 12, color: '#999' }}>
               ({record.targetId})
@@ -49,23 +70,25 @@ const NotificationsTable: React.FC<NotificationsTableProps> = ({
       ),
     },
     {
-      title: 'Recipients',
-      dataIndex: 'recipientsCount',
-      key: 'recipientsCount',
-      width: 100,
-      render: (count: number) => count.toLocaleString(),
+      title: 'Qabul qiluvchilar',
+      key: 'recipients',
+      width: 120,
+      render: (_: unknown, record: NotificationRow) => {
+        const count = record._count?.recipients;
+        return count !== undefined && count !== null ? Number(count).toLocaleString() : '0';
+      },
     },
     {
-      title: 'Created At',
+      title: 'Yaratilgan joyi',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 160,
-      render: (date: string) => dayjs(date).format('DD.MM.YYYY HH:mm'),
+      render: (date: string) => date ? dayjs(date).format('DD.MM.YYYY HH:mm') : '-',
     },
   ];
 
   return (
-    <Table<Notification>
+    <Table<NotificationRow>
       columns={columns}
       dataSource={data}
       rowKey="id"
@@ -75,7 +98,7 @@ const NotificationsTable: React.FC<NotificationsTableProps> = ({
         pageSize: limit,
         total,
         showSizeChanger: true,
-        showTotal: (t) => `Total: ${t}`,
+        showTotal: (t) => `Jami: ${t}`,
         onChange: onPageChange,
       }}
     />
