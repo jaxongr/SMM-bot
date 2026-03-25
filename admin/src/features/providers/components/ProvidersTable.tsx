@@ -48,8 +48,8 @@ const ProvidersTable: React.FC<ProvidersTableProps> = ({
       title: 'Balance',
       dataIndex: 'balance',
       key: 'balance',
-      render: (balance: number | null) =>
-        balance !== null ? `$${balance.toFixed(2)}` : '-',
+      render: (balance: string | number | null) =>
+        balance !== null && balance !== undefined ? `$${Number(balance).toFixed(2)}` : '-',
     },
     {
       title: 'Active',
