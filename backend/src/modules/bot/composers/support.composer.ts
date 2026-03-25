@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import { type Conversation, createConversation } from '@grammyjs/conversations';
 import { BotContext } from '../types/context.type';
 import { mainMenuKeyboard } from '../keyboards/main-menu.keyboard';
+import { t, getLang } from '../utils/i18n.helper';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 const logger = new Logger('SupportComposer');
@@ -15,14 +16,14 @@ export function createSupportComposer(prisma: PrismaService): Composer<BotContex
   async function supportFlow(conversation: SupportConversation, ctx: BotContext) {
     if (!ctx.user) return;
 
-    const lang = ctx.user.language;
+    const lang = getLang(ctx);
 
-    await ctx.reply(ctx.t('support_new'), { parse_mode: 'HTML' });
+    await ctx.reply(t(ctx, 'support_new'), { parse_mode: 'HTML' });
 
     const msgCtx = await conversation.wait();
 
     if (!msgCtx.message?.text) {
-      await ctx.reply(ctx.t('support_new'), { parse_mode: 'HTML' });
+      await ctx.reply(t(ctx, 'support_new'), { parse_mode: 'HTML' });
       return;
     }
 
@@ -44,7 +45,7 @@ export function createSupportComposer(prisma: PrismaService): Composer<BotContex
         },
       });
 
-      await ctx.reply(ctx.t('support_sent'), {
+      await ctx.reply(t(ctx, 'support_sent'), {
         parse_mode: 'HTML',
         reply_markup: mainMenuKeyboard(lang),
       });
@@ -52,7 +53,7 @@ export function createSupportComposer(prisma: PrismaService): Composer<BotContex
       logger.log(`Support ticket created: id=${ticket.id}, userId=${ctx.user.id}`);
     } catch (error) {
       logger.error(`Support ticket creation failed: ${error}`);
-      await ctx.reply(ctx.t('order_status_failed'), { parse_mode: 'HTML' });
+      await ctx.reply(t(ctx, 'order_status_failed'), { parse_mode: 'HTML' });
     }
   }
 

@@ -2,6 +2,7 @@ import { Composer } from 'grammy';
 import { Logger } from '@nestjs/common';
 import { BotContext } from '../types/context.type';
 import { formatPrice, formatDate } from '../utils/format-message';
+import { t, getLang } from '../utils/i18n.helper';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 const logger = new Logger('ProfileComposer');
@@ -16,7 +17,7 @@ export function createProfileComposer(prisma: PrismaService): Composer<BotContex
 export async function showProfile(ctx: BotContext, prisma: PrismaService): Promise<void> {
   if (!ctx.user) return;
 
-  const lang = ctx.user.language;
+  const lang = getLang(ctx);
 
   const [user, orderCount] = await Promise.all([
     prisma.user.findUnique({
@@ -31,7 +32,7 @@ export async function showProfile(ctx: BotContext, prisma: PrismaService): Promi
   const name = user.firstName || user.username || 'User';
 
   await ctx.reply(
-    ctx.t('profile_info', {
+    t(ctx, 'profile_info', {
       id: user.id.slice(-8).toUpperCase(),
       name,
       balance: formatPrice(Number(user.balance)),

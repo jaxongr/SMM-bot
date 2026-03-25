@@ -6,6 +6,7 @@ import { confirmKeyboard } from '../keyboards/inline.keyboard';
 import { mainMenuKeyboard } from '../keyboards/main-menu.keyboard';
 import { isValidLink } from '../utils/validate-link';
 import { formatPrice } from '../utils/format-message';
+import { t, getLang } from '../utils/i18n.helper';
 import { ServicesService } from '../../services/services.service';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { BalanceService } from '../../balance/balance.service';
@@ -37,11 +38,11 @@ export function createOrderComposer(
       return;
     }
 
-    const lang = ctx.user?.language || 'uz';
+    const lang = getLang(ctx);
     const platform = (service.category as { platform?: string })?.platform || 'TELEGRAM';
 
     // Step 1: Ask for link
-    await ctx.reply(ctx.t('enter_link'), { parse_mode: 'HTML' });
+    await ctx.reply(t(ctx, 'enter_link'), { parse_mode: 'HTML' });
 
     let link = '';
     let validLink = false;
@@ -50,14 +51,14 @@ export function createOrderComposer(
       const linkCtx = await conversation.wait();
 
       if (!linkCtx.message?.text) {
-        await linkCtx.reply(ctx.t('invalid_link'), { parse_mode: 'HTML' });
+        await linkCtx.reply(t(ctx, 'invalid_link'), { parse_mode: 'HTML' });
         continue;
       }
 
       link = linkCtx.message.text.trim();
 
       if (!isValidLink(link, platform)) {
-        await linkCtx.reply(ctx.t('invalid_link'), { parse_mode: 'HTML' });
+        await linkCtx.reply(t(ctx, 'invalid_link'), { parse_mode: 'HTML' });
         continue;
       }
 
@@ -68,7 +69,7 @@ export function createOrderComposer(
     const minQty = service.minQuantity;
     const maxQty = service.maxQuantity;
 
-    await ctx.reply(ctx.t('enter_quantity', { min: minQty, max: maxQty }), {
+    await ctx.reply(t(ctx, 'enter_quantity', { min: minQty, max: maxQty }), {
       parse_mode: 'HTML',
     });
 
@@ -79,7 +80,7 @@ export function createOrderComposer(
       const qtyCtx = await conversation.wait();
 
       if (!qtyCtx.message?.text) {
-        await qtyCtx.reply(ctx.t('invalid_quantity', { min: minQty, max: maxQty }), {
+        await qtyCtx.reply(t(ctx, 'invalid_quantity', { min: minQty, max: maxQty }), {
           parse_mode: 'HTML',
         });
         continue;
@@ -88,7 +89,7 @@ export function createOrderComposer(
       const parsed = parseInt(qtyCtx.message.text.trim(), 10);
 
       if (isNaN(parsed) || parsed < minQty || parsed > maxQty) {
-        await qtyCtx.reply(ctx.t('invalid_quantity', { min: minQty, max: maxQty }), {
+        await qtyCtx.reply(t(ctx, 'invalid_quantity', { min: minQty, max: maxQty }), {
           parse_mode: 'HTML',
         });
         continue;
@@ -108,7 +109,7 @@ export function createOrderComposer(
       'Unknown';
 
     await ctx.reply(
-      ctx.t('order_summary', {
+      t(ctx, 'order_summary', {
         service: serviceName,
         link,
         quantity,
@@ -128,14 +129,14 @@ export function createOrderComposer(
     ]);
 
     if (confirmCtx.callbackQuery.data === 'order:cancel') {
-      await confirmCtx.editMessageText(ctx.t('cancel'), { parse_mode: 'HTML' });
+      await confirmCtx.editMessageText(t(ctx, 'cancel'), { parse_mode: 'HTML' });
       return;
     }
 
     // Step 5: Check balance and create order
     if (userBalance < totalPrice) {
       await confirmCtx.editMessageText(
-        ctx.t('insufficient_balance', {
+        t(ctx, 'insufficient_balance', {
           required: formatPrice(totalPrice),
           balance: formatPrice(userBalance),
         }),
@@ -165,12 +166,12 @@ export function createOrderComposer(
       });
 
       await confirmCtx.editMessageText(
-        ctx.t('order_created', { orderId: order.id.slice(-6).toUpperCase() }),
+        t(ctx, 'order_created', { orderId: order.id.slice(-6).toUpperCase() }),
         { parse_mode: 'HTML' },
       );
 
       // Show main menu
-      await ctx.reply(ctx.t('main_menu'), {
+      await ctx.reply(t(ctx, 'main_menu'), {
         parse_mode: 'HTML',
         reply_markup: mainMenuKeyboard(lang),
       });
@@ -178,7 +179,7 @@ export function createOrderComposer(
       logger.log(`Order created: id=${order.id}, userId=${ctx.user!.id}, serviceId=${svcId}`);
     } catch (error) {
       logger.error(`Order creation failed: ${error}`);
-      await confirmCtx.editMessageText(ctx.t('order_status_failed'), { parse_mode: 'HTML' });
+      await confirmCtx.editMessageText(t(ctx, 'order_status_failed'), { parse_mode: 'HTML' });
     }
   }
 

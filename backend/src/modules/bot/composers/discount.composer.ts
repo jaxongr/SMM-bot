@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import { type Conversation, createConversation } from '@grammyjs/conversations';
 import { BotContext } from '../types/context.type';
 import { mainMenuKeyboard } from '../keyboards/main-menu.keyboard';
+import { t, getLang } from '../utils/i18n.helper';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { BalanceService } from '../../balance/balance.service';
 
@@ -19,14 +20,14 @@ export function createDiscountComposer(
   async function discountFlow(conversation: DiscountConversation, ctx: BotContext) {
     if (!ctx.user) return;
 
-    const lang = ctx.user.language;
+    const lang = getLang(ctx);
 
-    await ctx.reply(ctx.t('discount_title'), { parse_mode: 'HTML' });
+    await ctx.reply(t(ctx, 'discount_title'), { parse_mode: 'HTML' });
 
     const codeCtx = await conversation.wait();
 
     if (!codeCtx.message?.text) {
-      await ctx.reply(ctx.t('discount_invalid'), { parse_mode: 'HTML' });
+      await ctx.reply(t(ctx, 'discount_invalid'), { parse_mode: 'HTML' });
       return;
     }
 
@@ -39,12 +40,12 @@ export function createDiscountComposer(
       });
 
       if (!promo) {
-        await ctx.reply(ctx.t('discount_invalid'), { parse_mode: 'HTML' });
+        await ctx.reply(t(ctx, 'discount_invalid'), { parse_mode: 'HTML' });
         return;
       }
 
       if (!promo.isActive) {
-        await ctx.reply(ctx.t('discount_invalid'), { parse_mode: 'HTML' });
+        await ctx.reply(t(ctx, 'discount_invalid'), { parse_mode: 'HTML' });
         return;
       }
 
@@ -59,19 +60,19 @@ export function createDiscountComposer(
       });
 
       if (alreadyUsed) {
-        await ctx.reply(ctx.t('discount_already_used'), { parse_mode: 'HTML' });
+        await ctx.reply(t(ctx, 'discount_already_used'), { parse_mode: 'HTML' });
         return;
       }
 
       // Check expiry
       if (promo.expiresAt && new Date() > promo.expiresAt) {
-        await ctx.reply(ctx.t('discount_invalid'), { parse_mode: 'HTML' });
+        await ctx.reply(t(ctx, 'discount_invalid'), { parse_mode: 'HTML' });
         return;
       }
 
       // Check max uses
       if (promo.maxUsages !== null && promo.usedCount >= (promo.maxUsages ?? 0)) {
-        await ctx.reply(ctx.t('discount_invalid'), { parse_mode: 'HTML' });
+        await ctx.reply(t(ctx, 'discount_invalid'), { parse_mode: 'HTML' });
         return;
       }
 
@@ -102,14 +103,14 @@ export function createDiscountComposer(
       const discountFormatted = `${discountAmount.toLocaleString()} so'm`;
 
       await ctx.reply(
-        ctx.t('discount_success', {
+        t(ctx, 'discount_success', {
           code: promoCode,
           discount: discountFormatted,
         }),
         { parse_mode: 'HTML' },
       );
 
-      await ctx.reply(ctx.t('main_menu'), {
+      await ctx.reply(t(ctx, 'main_menu'), {
         parse_mode: 'HTML',
         reply_markup: mainMenuKeyboard(lang),
       });
@@ -117,7 +118,7 @@ export function createDiscountComposer(
       logger.log(`Promo code applied: code=${promoCode}, userId=${ctx.user.id}, amount=${discountAmount}`);
     } catch (error) {
       logger.error(`Promo code application failed: ${error}`);
-      await ctx.reply(ctx.t('discount_invalid'), { parse_mode: 'HTML' });
+      await ctx.reply(t(ctx, 'discount_invalid'), { parse_mode: 'HTML' });
     }
   }
 

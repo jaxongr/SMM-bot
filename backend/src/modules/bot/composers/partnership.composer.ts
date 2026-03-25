@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import { BotContext } from '../types/context.type';
 import { partnershipKeyboard } from '../keyboards/inline.keyboard';
 import { mainMenuKeyboard } from '../keyboards/main-menu.keyboard';
+import { t, getLang } from '../utils/i18n.helper';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 const logger = new Logger('PartnershipComposer');
@@ -14,7 +15,7 @@ export function createPartnershipComposer(prisma: PrismaService): Composer<BotCo
   composer.callbackQuery('partnership:apply', async (ctx) => {
     if (!ctx.user) return;
 
-    const lang = ctx.user.language;
+    const lang = getLang(ctx);
 
     try {
       // Create a support ticket for partnership application
@@ -33,11 +34,11 @@ export function createPartnershipComposer(prisma: PrismaService): Composer<BotCo
         },
       });
 
-      await ctx.editMessageText(ctx.t('partnership_applied'), {
+      await ctx.editMessageText(t(ctx, 'partnership_applied'), {
         parse_mode: 'HTML',
       });
 
-      await ctx.reply(ctx.t('main_menu'), {
+      await ctx.reply(t(ctx, 'main_menu'), {
         parse_mode: 'HTML',
         reply_markup: mainMenuKeyboard(lang),
       });
@@ -55,9 +56,9 @@ export function createPartnershipComposer(prisma: PrismaService): Composer<BotCo
 }
 
 export async function showPartnership(ctx: BotContext): Promise<void> {
-  const lang = ctx.user?.language || 'uz';
+  const lang = getLang(ctx);
 
-  await ctx.reply(ctx.t('partnership_title'), {
+  await ctx.reply(t(ctx, 'partnership_title'), {
     parse_mode: 'HTML',
     reply_markup: partnershipKeyboard(lang),
   });

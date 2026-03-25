@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import { BotContext } from '../types/context.type';
 import { referralKeyboard } from '../keyboards/inline.keyboard';
 import { formatPrice } from '../utils/format-message';
+import { t, getLang } from '../utils/i18n.helper';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 
@@ -32,7 +33,7 @@ export async function showReferral(
 ): Promise<void> {
   if (!ctx.user) return;
 
-  const lang = ctx.user.language;
+  const lang = getLang(ctx);
 
   const user = await prisma.user.findUnique({
     where: { id: ctx.user.id },
@@ -61,7 +62,7 @@ export async function showReferral(
   const earned = Number(referralEarnings._sum.earnedAmount || 0);
 
   await ctx.reply(
-    ctx.t('referral_info', {
+    t(ctx, 'referral_info', {
       link: referralLink,
       count: referralCount,
       earned: formatPrice(earned),

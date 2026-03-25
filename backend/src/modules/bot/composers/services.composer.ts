@@ -2,6 +2,7 @@ import { Composer } from 'grammy';
 import { Logger } from '@nestjs/common';
 import { BotContext } from '../types/context.type';
 import { platformKeyboard, categoryKeyboard, serviceKeyboard } from '../keyboards/inline.keyboard';
+import { t, getLang } from '../utils/i18n.helper';
 import { CategoriesService } from '../../services/categories.service';
 import { ServicesService } from '../../services/services.service';
 
@@ -16,7 +17,7 @@ export function createServicesComposer(
   // Show categories for a platform
   composer.callbackQuery(/^platform:(.+)$/, async (ctx) => {
     const platform = ctx.match[1];
-    const lang = ctx.user?.language || 'uz';
+    const lang = getLang(ctx);
 
     try {
       const result = await categoriesService.findAll(
@@ -37,7 +38,7 @@ export function createServicesComposer(
       const platformName = platform === 'TELEGRAM' ? 'Telegram' : 'Instagram';
 
       await ctx.editMessageText(
-        `${platformIcon} <b>${platformName}</b>\n\n${ctx.t('select_category')}`,
+        `${platformIcon} <b>${platformName}</b>\n\n${t(ctx, 'select_category')}`,
         {
           parse_mode: 'HTML',
           reply_markup: categoryKeyboard(categories, lang),
@@ -54,7 +55,7 @@ export function createServicesComposer(
   // Show services for a category
   composer.callbackQuery(/^category:(.+)$/, async (ctx) => {
     const categoryId = ctx.match[1];
-    const lang = ctx.user?.language || 'uz';
+    const lang = getLang(ctx);
 
     try {
       const result = await servicesService.getServicesByCategory(categoryId);
@@ -70,7 +71,7 @@ export function createServicesComposer(
         return;
       }
 
-      await ctx.editMessageText(ctx.t('select_service'), {
+      await ctx.editMessageText(t(ctx, 'select_service'), {
         parse_mode: 'HTML',
         reply_markup: serviceKeyboard(services, lang),
       });
@@ -84,8 +85,8 @@ export function createServicesComposer(
 
   // Back to platforms
   composer.callbackQuery('back:platforms', async (ctx) => {
-    const lang = ctx.user?.language || 'uz';
-    await ctx.editMessageText(ctx.t('select_platform'), {
+    const lang = getLang(ctx);
+    await ctx.editMessageText(t(ctx, 'select_platform'), {
       parse_mode: 'HTML',
       reply_markup: platformKeyboard(lang),
     });
@@ -94,8 +95,8 @@ export function createServicesComposer(
 
   // Back to categories — go back to platform selection
   composer.callbackQuery('back:categories', async (ctx) => {
-    const lang = ctx.user?.language || 'uz';
-    await ctx.editMessageText(ctx.t('select_platform'), {
+    const lang = getLang(ctx);
+    await ctx.editMessageText(t(ctx, 'select_platform'), {
       parse_mode: 'HTML',
       reply_markup: platformKeyboard(lang),
     });
@@ -106,8 +107,8 @@ export function createServicesComposer(
 }
 
 export async function showPlatforms(ctx: BotContext): Promise<void> {
-  const lang = ctx.user?.language || 'uz';
-  await ctx.reply(ctx.t('select_platform'), {
+  const lang = getLang(ctx);
+  await ctx.reply(t(ctx, 'select_platform'), {
     parse_mode: 'HTML',
     reply_markup: platformKeyboard(lang),
   });

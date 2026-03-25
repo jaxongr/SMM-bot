@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import { BotContext } from '../types/context.type';
 import { languageKeyboard } from '../keyboards/inline.keyboard';
 import { mainMenuKeyboard } from '../keyboards/main-menu.keyboard';
+import { t } from '../utils/i18n.helper';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 const logger = new Logger('LanguageComposer');
@@ -34,11 +35,11 @@ export function createLanguageComposer(prisma: PrismaService): Composer<BotConte
       ctx.user.language = language;
       ctx.session.language = language;
 
-      await ctx.editMessageText(ctx.t('language_changed'), {
+      await ctx.editMessageText(t(ctx, 'language_changed'), {
         parse_mode: 'HTML',
       });
 
-      await ctx.reply(ctx.t('main_menu'), {
+      await ctx.reply(t(ctx, 'main_menu'), {
         parse_mode: 'HTML',
         reply_markup: mainMenuKeyboard(language),
       });
@@ -55,7 +56,7 @@ export function createLanguageComposer(prisma: PrismaService): Composer<BotConte
 }
 
 export async function showLanguage(ctx: BotContext): Promise<void> {
-  await ctx.reply(ctx.t('language_select'), {
+  await ctx.reply(t(ctx, 'language_select'), {
     parse_mode: 'HTML',
     reply_markup: languageKeyboard(),
   });

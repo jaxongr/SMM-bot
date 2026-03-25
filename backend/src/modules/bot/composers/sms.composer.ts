@@ -4,6 +4,7 @@ import { BotContext } from '../types/context.type';
 import { smsServiceKeyboard, smsCountryKeyboard, smsBuyKeyboard, smsStatusKeyboard } from '../keyboards/inline.keyboard';
 import { mainMenuKeyboard } from '../keyboards/main-menu.keyboard';
 import { formatPrice } from '../utils/format-message';
+import { t, getLang } from '../utils/i18n.helper';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { BalanceService } from '../../balance/balance.service';
 
@@ -46,7 +47,7 @@ export function createSmsComposer(
   // Show SMS services list
   composer.callbackQuery(/^sms_service:(.+)$/, async (ctx) => {
     const serviceCode = ctx.match[1];
-    const lang = ctx.user?.language || 'uz';
+    const lang = getLang(ctx);
 
     const service = SMS_SERVICES.find((s) => s.code === serviceCode);
     if (!service) {
@@ -57,7 +58,7 @@ export function createSmsComposer(
     const countries = SMS_COUNTRIES[serviceCode] || SMS_COUNTRIES['default'];
 
     await ctx.editMessageText(
-      ctx.t('sms_select_country', { service: `${service.icon} ${service.name}` }),
+      t(ctx, 'sms_select_country', { service: `${service.icon} ${service.name}` }),
       {
         parse_mode: 'HTML',
         reply_markup: smsCountryKeyboard(countries, lang),
@@ -73,7 +74,7 @@ export function createSmsComposer(
   // Show price confirmation when country selected
   composer.callbackQuery(/^sms_country:(.+)$/, async (ctx) => {
     const countryCode = ctx.match[1];
-    const lang = ctx.user?.language || 'uz';
+    const lang = getLang(ctx);
     const serviceCode = ctx.session.smsService || 'tg';
 
     const service = SMS_SERVICES.find((s) => s.code === serviceCode);
@@ -88,7 +89,7 @@ export function createSmsComposer(
     const userBalance = ctx.user?.balance || 0;
 
     await ctx.editMessageText(
-      ctx.t('sms_price_confirm', {
+      t(ctx, 'sms_price_confirm', {
         service: `${service.icon} ${service.name}`,
         country: `${country.flag} ${country.name}`,
         price: country.price.toLocaleString(),
@@ -107,7 +108,7 @@ export function createSmsComposer(
   composer.callbackQuery(/^sms_buy:(.+):(.+)$/, async (ctx) => {
     const serviceCode = ctx.match[1];
     const countryCode = ctx.match[2];
-    const lang = ctx.user?.language || 'uz';
+    const lang = getLang(ctx);
 
     if (!ctx.user) return;
 
@@ -124,7 +125,7 @@ export function createSmsComposer(
     const userBalance = ctx.user.balance;
     if (userBalance < country.price) {
       await ctx.editMessageText(
-        ctx.t('sms_insufficient_balance', {
+        t(ctx, 'sms_insufficient_balance', {
           price: country.price.toLocaleString(),
           balance: formatPrice(userBalance),
         }),
@@ -166,7 +167,7 @@ export function createSmsComposer(
       }
 
       await ctx.editMessageText(
-        ctx.t('sms_purchased', {
+        t(ctx, 'sms_purchased', {
           service: `${service.icon} ${service.name}`,
           phone: phoneNumber,
         }),
@@ -179,7 +180,7 @@ export function createSmsComposer(
       logger.log(`SMS activation created: userId=${ctx.user.id}, service=${serviceCode}, country=${countryCode}`);
     } catch (error) {
       logger.error(`SMS purchase failed: ${error}`);
-      await ctx.editMessageText(ctx.t('sms_error'), { parse_mode: 'HTML' });
+      await ctx.editMessageText(t(ctx, 'sms_error'), { parse_mode: 'HTML' });
     }
 
     await ctx.answerCallbackQuery();
@@ -188,7 +189,7 @@ export function createSmsComposer(
   // Check SMS status
   composer.callbackQuery(/^sms_status:(.+)$/, async (ctx) => {
     const activationId = ctx.match[1];
-    const lang = ctx.user?.language || 'uz';
+    const lang = getLang(ctx);
 
     try {
       const activation = await prisma.smsActivation.findUnique({
@@ -203,7 +204,7 @@ export function createSmsComposer(
       if (activation.code) {
         // Code received
         await ctx.editMessageText(
-          ctx.t('sms_code_received', {
+          t(ctx, 'sms_code_received', {
             phone: activation.phone,
             code: activation.code,
           }),
@@ -212,14 +213,14 @@ export function createSmsComposer(
       } else if (new Date() > activation.expiresAt) {
         // Expired
         await ctx.editMessageText(
-          ctx.t('sms_expired', { phone: activation.phone }),
+          t(ctx, 'sms_expired', { phone: activation.phone }),
           { parse_mode: 'HTML' },
         );
       } else {
         // Still waiting
         const remaining = Math.ceil((activation.expiresAt.getTime() - Date.now()) / 60000);
         await ctx.editMessageText(
-          ctx.t('sms_waiting', {
+          t(ctx, 'sms_waiting', {
             phone: activation.phone,
             time: `${remaining} min`,
           }),
@@ -266,7 +267,7 @@ export function createSmsComposer(
       });
 
       await ctx.editMessageText(
-        ctx.t('sms_canceled', { phone: activation.phone }),
+        t(ctx, 'sms_canceled', { phone: activation.phone }),
         { parse_mode: 'HTML' },
       );
 
@@ -281,8 +282,8 @@ export function createSmsComposer(
 
   // Back to SMS services list
   composer.callbackQuery('back:sms_services', async (ctx) => {
-    const lang = ctx.user?.language || 'uz';
-    await ctx.editMessageText(ctx.t('sms_title'), {
+    const lang = getLang(ctx);
+    await ctx.editMessageText(t(ctx, 'sms_title'), {
       parse_mode: 'HTML',
       reply_markup: smsServiceKeyboard(SMS_SERVICES, lang),
     });
@@ -293,8 +294,8 @@ export function createSmsComposer(
 }
 
 export async function showSmsServices(ctx: BotContext): Promise<void> {
-  const lang = ctx.user?.language || 'uz';
-  await ctx.reply(ctx.t('sms_title'), {
+  const lang = getLang(ctx);
+  await ctx.reply(t(ctx, 'sms_title'), {
     parse_mode: 'HTML',
     reply_markup: smsServiceKeyboard(SMS_SERVICES, lang),
   });

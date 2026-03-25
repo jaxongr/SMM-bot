@@ -5,6 +5,7 @@ import { BotContext } from '../types/context.type';
 import { paymentMethodKeyboard, balanceKeyboard } from '../keyboards/inline.keyboard';
 import { mainMenuKeyboard } from '../keyboards/main-menu.keyboard';
 import { formatPrice, formatDate } from '../utils/format-message';
+import { t, getLang } from '../utils/i18n.helper';
 import { BalanceService } from '../../balance/balance.service';
 import { PaymentsService } from '../../payments/payments.service';
 import { PrismaService } from '../../../prisma/prisma.service';
@@ -24,9 +25,9 @@ export function createBalanceComposer(
   const composer = new Composer<BotContext>();
 
   async function topupFlow(conversation: TopupConversation, ctx: BotContext) {
-    const lang = ctx.user?.language || 'uz';
+    const lang = getLang(ctx);
 
-    await ctx.reply(ctx.t('topup_select_method'), {
+    await ctx.reply(t(ctx, 'topup_select_method'), {
       parse_mode: 'HTML',
       reply_markup: paymentMethodKeyboard(lang),
     });
@@ -48,7 +49,7 @@ export function createBalanceComposer(
     const method = methodCtx.callbackQuery.data.replace('pay:', '') as PaymentMethod;
     await methodCtx.answerCallbackQuery();
 
-    await ctx.reply(ctx.t('topup_enter_amount', { min: MIN_TOPUP_AMOUNT }), {
+    await ctx.reply(t(ctx, 'topup_enter_amount', { min: MIN_TOPUP_AMOUNT }), {
       parse_mode: 'HTML',
     });
 
@@ -59,7 +60,7 @@ export function createBalanceComposer(
       const amountCtx = await conversation.wait();
 
       if (!amountCtx.message?.text) {
-        await amountCtx.reply(ctx.t('topup_enter_amount', { min: MIN_TOPUP_AMOUNT }), {
+        await amountCtx.reply(t(ctx, 'topup_enter_amount', { min: MIN_TOPUP_AMOUNT }), {
           parse_mode: 'HTML',
         });
         continue;
@@ -68,7 +69,7 @@ export function createBalanceComposer(
       const parsed = parseInt(amountCtx.message.text.trim(), 10);
 
       if (isNaN(parsed) || parsed < MIN_TOPUP_AMOUNT) {
-        await amountCtx.reply(ctx.t('topup_enter_amount', { min: MIN_TOPUP_AMOUNT }), {
+        await amountCtx.reply(t(ctx, 'topup_enter_amount', { min: MIN_TOPUP_AMOUNT }), {
           parse_mode: 'HTML',
         });
         continue;
@@ -90,14 +91,14 @@ export function createBalanceComposer(
         : `🆔 Payment ID: <code>${result.data.paymentId}</code>`;
 
       await ctx.reply(
-        ctx.t('topup_created', {
+        t(ctx, 'topup_created', {
           amount: formatPrice(amount),
           paymentInfo,
         }),
         { parse_mode: 'HTML' },
       );
 
-      await ctx.reply(ctx.t('main_menu'), {
+      await ctx.reply(t(ctx, 'main_menu'), {
         parse_mode: 'HTML',
         reply_markup: mainMenuKeyboard(lang),
       });
@@ -105,7 +106,7 @@ export function createBalanceComposer(
       logger.log(`Topup payment created: userId=${ctx.user!.id}, amount=${amount}, method=${method}`);
     } catch (error) {
       logger.error(`Topup payment creation failed: ${error}`);
-      await ctx.reply(ctx.t('order_status_failed'), { parse_mode: 'HTML' });
+      await ctx.reply(t(ctx, 'order_status_failed'), { parse_mode: 'HTML' });
     }
   }
 
@@ -136,12 +137,12 @@ export async function showBalance(
 ): Promise<void> {
   if (!ctx.user) return;
 
-  const lang = ctx.user.language;
+  const lang = getLang(ctx);
   const result = await balanceService.getBalance(ctx.user.id);
   const balance = Number(result.data.balance);
 
   await ctx.reply(
-    ctx.t('balance_info', { balance: formatPrice(balance) }),
+    t(ctx, 'balance_info', { balance: formatPrice(balance) }),
     {
       parse_mode: 'HTML',
       reply_markup: balanceKeyboard(lang),
@@ -156,7 +157,7 @@ async function showBalanceWithHistory(
 ): Promise<void> {
   if (!ctx.user) return;
 
-  const lang = ctx.user.language;
+  const lang = getLang(ctx);
   const result = await balanceService.getBalance(ctx.user.id);
   const balance = Number(result.data.balance);
 
@@ -188,7 +189,7 @@ async function showBalanceWithHistory(
 
   if (historyText) {
     await ctx.reply(
-      ctx.t('balance_with_history', {
+      t(ctx, 'balance_with_history', {
         balance: formatPrice(balance),
         history: historyText,
       }),
@@ -199,7 +200,7 @@ async function showBalanceWithHistory(
     );
   } else {
     await ctx.reply(
-      ctx.t('balance_info', { balance: formatPrice(balance) }),
+      t(ctx, 'balance_info', { balance: formatPrice(balance) }),
       {
         parse_mode: 'HTML',
         reply_markup: balanceKeyboard(lang),
