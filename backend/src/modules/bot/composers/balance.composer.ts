@@ -1,129 +1,165 @@
-import { Composer } from 'grammy';
+import { Composer, InlineKeyboard } from 'grammy';
 import { Logger } from '@nestjs/common';
-import { type Conversation, createConversation } from '@grammyjs/conversations';
 import { BotContext } from '../types/context.type';
-import { paymentMethodKeyboard, balanceKeyboard } from '../keyboards/inline.keyboard';
 import { mainMenuKeyboard } from '../keyboards/main-menu.keyboard';
 import { formatPrice, formatDate } from '../utils/format-message';
 import { t, getLang } from '../utils/i18n.helper';
 import { BalanceService } from '../../balance/balance.service';
-import { PaymentsService } from '../../payments/payments.service';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { PaymentMethod } from '@prisma/client';
 
 const logger = new Logger('BalanceComposer');
 
-const MIN_TOPUP_AMOUNT = 1000;
-
-type TopupConversation = Conversation<BotContext>;
+// Admin karta raqami — admin paneldan o'zgartirish mumkin
+const ADMIN_CARD_NUMBER = '8600 1234 5678 9012';
+const ADMIN_CARD_HOLDER = 'SMM Bot Admin';
 
 export function createBalanceComposer(
   balanceService: BalanceService,
-  paymentsService: PaymentsService,
+  _paymentsService: unknown,
   prisma: PrismaService,
 ): Composer<BotContext> {
   const composer = new Composer<BotContext>();
 
-  async function topupFlow(conversation: TopupConversation, ctx: BotContext) {
-    const lang = getLang(ctx);
-
-    await ctx.reply(t(ctx, 'topup_select_method'), {
-      parse_mode: 'HTML',
-      reply_markup: paymentMethodKeyboard(lang),
-    });
-
-    const methodCtx = await conversation.waitForCallbackQuery([
-      'pay:CLICK',
-      'pay:HUMO',
-      'pay:BANK',
-      'pay:CRYPTO',
-      'pay:ADMIN',
-      'back:balance',
-    ]);
-
-    if (methodCtx.callbackQuery.data === 'back:balance') {
-      await showBalance(ctx, balanceService, prisma);
-      return;
-    }
-
-    const method = methodCtx.callbackQuery.data.replace('pay:', '') as PaymentMethod;
-    await methodCtx.answerCallbackQuery();
-
-    await ctx.reply(t(ctx, 'topup_enter_amount', { min: MIN_TOPUP_AMOUNT }), {
-      parse_mode: 'HTML',
-    });
-
-    let amount = 0;
-    let validAmount = false;
-
-    while (!validAmount) {
-      const amountCtx = await conversation.wait();
-
-      if (!amountCtx.message?.text) {
-        await amountCtx.reply(t(ctx, 'topup_enter_amount', { min: MIN_TOPUP_AMOUNT }), {
-          parse_mode: 'HTML',
-        });
-        continue;
-      }
-
-      const parsed = parseInt(amountCtx.message.text.trim(), 10);
-
-      if (isNaN(parsed) || parsed < MIN_TOPUP_AMOUNT) {
-        await amountCtx.reply(t(ctx, 'topup_enter_amount', { min: MIN_TOPUP_AMOUNT }), {
-          parse_mode: 'HTML',
-        });
-        continue;
-      }
-
-      amount = parsed;
-      validAmount = true;
-    }
-
-    try {
-      const result = await paymentsService.initiate(ctx.user!.id, {
-        amount,
-        method,
-      });
-
-      const paymentUrl = result.data.paymentUrl || '';
-      const paymentInfo = paymentUrl
-        ? `🔗 <a href="${paymentUrl}">To'lov sahifasi</a>`
-        : `🆔 Payment ID: <code>${result.data.paymentId}</code>`;
-
-      await ctx.reply(
-        t(ctx, 'topup_created', {
-          amount: formatPrice(amount),
-          paymentInfo,
-        }),
-        { parse_mode: 'HTML' },
-      );
-
-      await ctx.reply(t(ctx, 'main_menu'), {
-        parse_mode: 'HTML',
-        reply_markup: mainMenuKeyboard(lang),
-      });
-
-      logger.log(`Topup payment created: userId=${ctx.user!.id}, amount=${amount}, method=${method}`);
-    } catch (error) {
-      logger.error(`Topup payment creation failed: ${error}`);
-      await ctx.reply(t(ctx, 'order_status_failed'), { parse_mode: 'HTML' });
-    }
-  }
-
-  composer.use(createConversation(topupFlow, 'topup-flow'));
-
+  // To'ldirish tugmasi bosilganda
   composer.callbackQuery('topup', async (ctx) => {
-    await ctx.conversation.enter('topup-flow');
+    const lang = getLang(ctx);
+    const keyboard = new InlineKeyboard()
+      .text('🏦 Bank karta (Uzcard/Humo)', 'topup:card')
+      .row()
+      .text('💳 Click', 'topup:click')
+      .row()
+      .text('💎 Crypto (USDT)', 'topup:crypto')
+      .row()
+      .text('👨‍💻 Adminga murojaat', 'topup:admin')
+      .row()
+      .text('⬅️ Orqaga', 'back:balance');
+
+    await ctx.editMessageText(
+      '<b>💳 To\'lov usulini tanlang:</b>\n\n' +
+      '🏦 <b>Bank karta</b> — Uzcard/Humo orqali\n' +
+      '💳 <b>Click</b> — Click ilovasi orqali\n' +
+      '💎 <b>Crypto</b> — USDT (TRC20)\n' +
+      '👨‍💻 <b>Admin</b> — bevosita admin bilan',
+      { parse_mode: 'HTML', reply_markup: keyboard },
+    );
     await ctx.answerCallbackQuery();
   });
 
+  // Bank karta to'lov
+  composer.callbackQuery('topup:card', async (ctx) => {
+    const keyboard = new InlineKeyboard()
+      .text('✅ To\'lov qildim', 'topup:card:done')
+      .row()
+      .text('⬅️ Orqaga', 'topup');
+
+    await ctx.editMessageText(
+      '<b>🏦 Bank karta orqali to\'lov</b>\n\n' +
+      '📋 Quyidagi karta raqamga pul o\'tkazing:\n\n' +
+      `💳 Karta: <code>${ADMIN_CARD_NUMBER}</code>\n` +
+      `👤 Egasi: <b>${ADMIN_CARD_HOLDER}</b>\n\n` +
+      '⚠️ <b>Muhim:</b>\n' +
+      '• Minimal summa: <b>1,000 so\'m</b>\n' +
+      '• To\'lovdan keyin "✅ To\'lov qildim" tugmasini bosing\n' +
+      '• Admin tekshirib, balansingizni to\'ldiradi\n' +
+      '• O\'rtacha kutish: <b>5-30 daqiqa</b>',
+      { parse_mode: 'HTML', reply_markup: keyboard },
+    );
+    await ctx.answerCallbackQuery();
+  });
+
+  // To'lov qildim — admin xabar oladi
+  composer.callbackQuery('topup:card:done', async (ctx) => {
+    if (!ctx.user) return;
+
+    try {
+      // Payment record yaratish
+      await prisma.payment.create({
+        data: {
+          userId: ctx.user.id,
+          amount: 0, // admin to'g'rilaydi
+          method: 'BANK',
+          status: 'PENDING',
+          metadata: {
+            type: 'card_transfer',
+            telegramId: ctx.user.telegramId.toString(),
+            username: ctx.user.username || '',
+            firstName: ctx.user.firstName || '',
+          },
+        },
+      });
+
+      await ctx.editMessageText(
+        '<b>✅ So\'rovingiz qabul qilindi!</b>\n\n' +
+        '📋 Admin to\'lovni tekshirmoqda...\n' +
+        '⏱ O\'rtacha kutish: <b>5-30 daqiqa</b>\n\n' +
+        '💡 Tezroq tasdiqlash uchun to\'lov chekini\n' +
+        '📸 shu yerga rasm sifatida yuboring.',
+        { parse_mode: 'HTML' },
+      );
+
+      logger.log(`Card payment request: user=${ctx.user.id}, tg=${ctx.user.telegramId}`);
+    } catch (error) {
+      logger.error(`Payment request failed: ${error}`);
+      await ctx.editMessageText(
+        '❌ Xatolik yuz berdi. Iltimos qaytadan urinib ko\'ring.',
+        { parse_mode: 'HTML' },
+      );
+    }
+    await ctx.answerCallbackQuery();
+  });
+
+  // Click to'lov
+  composer.callbackQuery('topup:click', async (ctx) => {
+    const keyboard = new InlineKeyboard()
+      .text('⬅️ Orqaga', 'topup');
+
+    await ctx.editMessageText(
+      '<b>💳 Click orqali to\'lov</b>\n\n' +
+      '🔧 <i>Tez kunda ishga tushadi!</i>\n\n' +
+      'Hozircha 🏦 Bank karta orqali to\'lov qilishingiz mumkin.',
+      { parse_mode: 'HTML', reply_markup: keyboard },
+    );
+    await ctx.answerCallbackQuery();
+  });
+
+  // Crypto to'lov
+  composer.callbackQuery('topup:crypto', async (ctx) => {
+    const keyboard = new InlineKeyboard()
+      .text('⬅️ Orqaga', 'topup');
+
+    await ctx.editMessageText(
+      '<b>💎 Crypto (USDT) orqali to\'lov</b>\n\n' +
+      '🔧 <i>Tez kunda ishga tushadi!</i>\n\n' +
+      'Hozircha 🏦 Bank karta orqali to\'lov qilishingiz mumkin.',
+      { parse_mode: 'HTML', reply_markup: keyboard },
+    );
+    await ctx.answerCallbackQuery();
+  });
+
+  // Admin bilan to'lov
+  composer.callbackQuery('topup:admin', async (ctx) => {
+    const keyboard = new InlineKeyboard()
+      .text('⬅️ Orqaga', 'topup');
+
+    await ctx.editMessageText(
+      '<b>👨‍💻 Admin bilan to\'lov</b>\n\n' +
+      '📩 Admin bilan bog\'lanish uchun:\n' +
+      '👤 @smm_admin\n\n' +
+      '💬 Yoki 🆘 Qo\'llab-quvvatlash bo\'limiga yozing.',
+      { parse_mode: 'HTML', reply_markup: keyboard },
+    );
+    await ctx.answerCallbackQuery();
+  });
+
+  // Orqaga — balans
   composer.callbackQuery('back:balance', async (ctx) => {
     await showBalance(ctx, balanceService, prisma);
     await ctx.answerCallbackQuery();
   });
 
+  // Balans tarixi
   composer.callbackQuery('balance:history', async (ctx) => {
-    await showBalanceWithHistory(ctx, balanceService, prisma);
+    await showBalanceHistory(ctx, prisma);
     await ctx.answerCallbackQuery();
   });
 
@@ -137,74 +173,65 @@ export async function showBalance(
 ): Promise<void> {
   if (!ctx.user) return;
 
-  const lang = getLang(ctx);
   const result = await balanceService.getBalance(ctx.user.id);
   const balance = Number(result.data.balance);
 
-  await ctx.reply(
-    t(ctx, 'balance_info', { balance: formatPrice(balance) }),
-    {
-      parse_mode: 'HTML',
-      reply_markup: balanceKeyboard(lang),
-    },
-  );
+  const keyboard = new InlineKeyboard()
+    .text('💳 Balansni to\'ldirish', 'topup')
+    .row()
+    .text('📊 To\'lovlar tarixi', 'balance:history');
+
+  const text =
+    '<b>💰 Sizning balansingiz</b>\n\n' +
+    '┌─────────────────────┐\n' +
+    `│  💳 <b>${formatPrice(balance)}</b>\n` +
+    '└─────────────────────┘\n\n' +
+    '💳 Balansni to\'ldirish uchun tugmani bosing:';
+
+  if (ctx.callbackQuery) {
+    await ctx.editMessageText(text, { parse_mode: 'HTML', reply_markup: keyboard });
+  } else {
+    await ctx.reply(text, { parse_mode: 'HTML', reply_markup: keyboard });
+  }
 }
 
-async function showBalanceWithHistory(
-  ctx: BotContext,
-  balanceService: BalanceService,
-  prisma: PrismaService,
-): Promise<void> {
+async function showBalanceHistory(ctx: BotContext, prisma: PrismaService): Promise<void> {
   if (!ctx.user) return;
 
-  const lang = getLang(ctx);
-  const result = await balanceService.getBalance(ctx.user.id);
-  const balance = Number(result.data.balance);
-
-  let historyText = '';
+  const keyboard = new InlineKeyboard()
+    .text('⬅️ Orqaga', 'back:balance');
 
   try {
     const transactions = await prisma.transaction.findMany({
       where: { userId: ctx.user.id },
       orderBy: { createdAt: 'desc' },
-      take: 5,
+      take: 10,
     });
 
-    if (transactions.length > 0) {
-      const lines: string[] = [];
-      for (let i = 0; i < transactions.length; i++) {
-        const tx = transactions[i];
-        const txAmount = Number(tx.amount);
-        const sign = txAmount >= 0 ? '+' : '';
-        const date = formatDate(tx.createdAt).split(' ')[0];
-        const desc = tx.description || tx.type;
-        const prefix = i === transactions.length - 1 ? '└' : '├';
-        lines.push(`${prefix} ${sign}${formatPrice(txAmount)} (${desc}) — ${date}`);
-      }
-      historyText = lines.join('\n');
+    if (transactions.length === 0) {
+      await ctx.editMessageText(
+        '<b>📊 To\'lovlar tarixi</b>\n\n📭 Hali to\'lovlar yo\'q.',
+        { parse_mode: 'HTML', reply_markup: keyboard },
+      );
+      return;
     }
-  } catch {
-    // If no transaction table, just show balance
-  }
 
-  if (historyText) {
-    await ctx.reply(
-      t(ctx, 'balance_with_history', {
-        balance: formatPrice(balance),
-        history: historyText,
-      }),
-      {
-        parse_mode: 'HTML',
-        reply_markup: balanceKeyboard(lang),
-      },
+    const lines = transactions.map((tx) => {
+      const amount = Number(tx.amount);
+      const sign = amount >= 0 ? '+' : '';
+      const date = formatDate(tx.createdAt).split(' ')[0];
+      const desc = tx.description || tx.type;
+      return `${sign}${formatPrice(amount)} — ${desc} (${date})`;
+    });
+
+    await ctx.editMessageText(
+      '<b>📊 To\'lovlar tarixi</b>\n\n' + lines.join('\n'),
+      { parse_mode: 'HTML', reply_markup: keyboard },
     );
-  } else {
-    await ctx.reply(
-      t(ctx, 'balance_info', { balance: formatPrice(balance) }),
-      {
-        parse_mode: 'HTML',
-        reply_markup: balanceKeyboard(lang),
-      },
+  } catch {
+    await ctx.editMessageText(
+      '<b>📊 To\'lovlar tarixi</b>\n\n📭 Hali to\'lovlar yo\'q.',
+      { parse_mode: 'HTML', reply_markup: keyboard },
     );
   }
 }
