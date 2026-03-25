@@ -68,8 +68,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({
         >
           <Input
             placeholder="8600 1234 5678 9012"
-            style={{ width: 300, fontSize: 18, letterSpacing: 2 }}
-            maxLength={19}
+            style={{ width: 300, fontSize: 18 }}
           />
         </Form.Item>
 
