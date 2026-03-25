@@ -1,4 +1,5 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Prisma, PaymentStatus, PaymentMethod } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BalanceService } from '../balance/balance.service';
@@ -19,6 +20,7 @@ export class PaymentsService {
     private readonly balanceService: BalanceService,
     private readonly clickGateway: ClickGateway,
     private readonly paymeGateway: PaymeGateway,
+    private readonly configService: ConfigService,
   ) {
     this.gateways = new Map<PaymentMethod, PaymentGateway>([
       [PaymentMethod.CLICK, this.clickGateway],
@@ -168,6 +170,33 @@ export class PaymentsService {
     );
 
     this.logger.log(`Payment manually approved: id=${id}`);
+
+    // Foydalanuvchiga Telegram xabar yuborish
+    try {
+      const user = await this.prisma.user.findUnique({ where: { id: payment.userId } });
+      if (user && user.telegramId) {
+        const botToken = this.configService.get<string>('telegram.botToken');
+        if (botToken) {
+          const amount = Number(payment.amount);
+          const newBalance = Number(user.balance) + amount;
+          const text = `<b>✅ To'lov tasdiqlandi!</b>\n\n` +
+            `💰 Summa: <b>${amount.toLocaleString()} so'm</b>\n` +
+            `💳 Yangi balans: <b>${newBalance.toLocaleString()} so'm</b>\n\n` +
+            `Xaridlaringiz muborak! 🎉`;
+          await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: user.telegramId.toString(),
+              text,
+              parse_mode: 'HTML',
+            }),
+          });
+        }
+      }
+    } catch (notifyError) {
+      this.logger.error(`Failed to notify user: ${notifyError}`);
+    }
 
     return { data: updatedPayment };
   }
