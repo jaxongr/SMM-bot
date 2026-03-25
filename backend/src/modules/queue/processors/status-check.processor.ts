@@ -8,6 +8,7 @@ import { OrderProcessorService } from '../../orders/order-processor.service';
 import { ORDER_STATUS_CHECK_QUEUE } from '../queue.constants';
 
 const ACTIVE_ORDER_STATUSES: OrderStatus[] = [
+  OrderStatus.PENDING,
   OrderStatus.PROCESSING,
   OrderStatus.IN_PROGRESS,
 ];
