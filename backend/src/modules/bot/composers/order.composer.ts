@@ -35,12 +35,15 @@ export function createOrderComposer(
         ctx.session.waitingOrderLink = true;
       }
 
+      const cancelKb = new InlineKeyboard().text('❌ Bekor qilish', 'cancel_order');
+
       await ctx.editMessageText(
         `<b>🛒 Buyurtma: ${name}</b>\n\n` +
         `💰 Narx: ${formatPrice(Number(svc.pricePerUnit) * 1000)} / 1000\n` +
         `📦 Min: ${svc.minQuantity} | Max: ${svc.maxQuantity}\n\n` +
-        `🔗 <b>Kanal/guruh/profil linkini yuboring:</b>`,
-        { parse_mode: 'HTML' },
+        `🔗 <b>Kanal/guruh/profil linkini yuboring:</b>\n\n` +
+        `<i>Yoki bekor qilish uchun tugmani bosing</i>`,
+        { parse_mode: 'HTML', reply_markup: cancelKb },
       );
     } catch (error) {
       logger.error(`Service not found: ${error}`);
@@ -60,8 +63,16 @@ export function createOrderComposer(
     if (session.waitingOrderLink) {
       const link = ctx.message.text.trim();
 
+      // Bekor qilish so'zi
+      if (link.toLowerCase() === 'bekor' || link === '❌' || link.toLowerCase() === 'cancel') {
+        session.waitingOrderLink = false;
+        session.orderServiceId = undefined;
+        await ctx.reply('❌ Buyurtma bekor qilindi.', { parse_mode: 'HTML' });
+        return;
+      }
+
       if (!link.startsWith('http') && !link.startsWith('t.me') && !link.startsWith('@')) {
-        await ctx.reply('❌ Noto\'g\'ri link! Qaytadan kiriting:\n\nMasalan: <code>https://t.me/kanal_nomi</code>', { parse_mode: 'HTML' });
+        await ctx.reply('❌ Noto\'g\'ri link! Qaytadan kiriting:\n\nMasalan: <code>https://t.me/kanal_nomi</code>\n\nBekor qilish uchun: <b>bekor</b> yozing', { parse_mode: 'HTML' });
         return;
       }
 
@@ -87,6 +98,15 @@ export function createOrderComposer(
 
     // Step 2: Capture quantity
     if (session.waitingOrderQuantity) {
+      const text = ctx.message.text.trim().toLowerCase();
+      if (text === 'bekor' || text === '❌' || text === 'cancel') {
+        session.waitingOrderQuantity = false;
+        session.orderServiceId = undefined;
+        session.orderLink = undefined;
+        await ctx.reply('❌ Buyurtma bekor qilindi.', { parse_mode: 'HTML' });
+        return;
+      }
+
       const qty = parseInt(ctx.message.text.replace(/\s/g, ''), 10);
       const serviceId = session.orderServiceId as string;
 

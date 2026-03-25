@@ -97,9 +97,15 @@ export function createBalanceComposer(
 
   // Capture payment amount
   composer.on('message:text', async (ctx, next) => {
-    logger.log(`Text received: "${ctx.message.text}", waitingAmount=${ctx.session?.waitingPaymentAmount}, waitingReceipt=${ctx.session?.waitingPaymentReceipt}`);
     if (!ctx.session?.waitingPaymentAmount) {
       return next();
+    }
+
+    const text = ctx.message.text.trim().toLowerCase();
+    if (text === 'bekor' || text === '❌' || text === 'cancel') {
+      ctx.session.waitingPaymentAmount = false;
+      await ctx.reply('❌ To\'lov bekor qilindi.', { parse_mode: 'HTML' });
+      return;
     }
 
     const amount = parseInt(ctx.message.text.replace(/\s/g, ''), 10);
