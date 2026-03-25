@@ -1,6 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
+import { ConfigService } from '@nestjs/config';
 import { NotificationTarget, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
@@ -9,11 +8,14 @@ import { buildPaginationMeta, getPaginationParams, PaginationParams } from '../.
 @Injectable()
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
+  private readonly botToken: string;
 
   constructor(
     private readonly prisma: PrismaService,
-    @InjectQueue('order-notifications') private readonly notificationQueue: Queue,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    this.botToken = this.configService.get<string>('telegram.botToken', '');
+  }
 
   async create(dto: CreateNotificationDto) {
     const notification = await this.prisma.notification.create({
@@ -28,6 +30,7 @@ export class NotificationsService {
     const userIds = await this.resolveTargetUsers(dto.targetType, dto.targetId);
 
     if (userIds.length > 0) {
+      // Create UserNotification records
       const BATCH_SIZE = 500;
       for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
         const batch = userIds.slice(i, i + BATCH_SIZE);
@@ -40,17 +43,63 @@ export class NotificationsService {
         });
       }
 
-      await this.notificationQueue.add('send-telegram-notifications', {
-        notificationId: notification.id,
-        title: dto.title,
-        message: dto.message,
-        userIds,
+      // Send Telegram messages directly
+      this.sendTelegramNotifications(userIds, dto.title as unknown as Record<string, string>, dto.message as unknown as Record<string, string>).catch((err) => {
+        this.logger.error(`Failed to send Telegram notifications: ${err}`);
       });
     }
 
     this.logger.log(`Notification created: id=${notification.id}, target=${dto.targetType}, recipients=${userIds.length}`);
 
     return { data: notification };
+  }
+
+  private async sendTelegramNotifications(
+    userIds: string[],
+    title: Record<string, string>,
+    message: Record<string, string>,
+  ) {
+    if (!this.botToken) return;
+
+    const users = await this.prisma.user.findMany({
+      where: { id: { in: userIds }, isBlocked: false },
+      select: { telegramId: true, language: true },
+    });
+
+    let sent = 0;
+    let failed = 0;
+
+    for (const user of users) {
+      if (!user.telegramId || user.telegramId === BigInt(0)) continue;
+
+      const lang = user.language || 'uz';
+      const titleText = title[lang] || title['uz'] || title['en'] || '';
+      const messageText = message[lang] || message['uz'] || message['en'] || '';
+
+      const text = `📢 <b>${titleText}</b>\n\n${messageText}`;
+
+      try {
+        await fetch(`https://api.telegram.org/bot${this.botToken}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: user.telegramId.toString(),
+            text,
+            parse_mode: 'HTML',
+          }),
+        });
+        sent++;
+
+        // Telegram rate limit: max 30 msg/sec
+        if (sent % 25 === 0) {
+          await new Promise((r) => setTimeout(r, 1000));
+        }
+      } catch {
+        failed++;
+      }
+    }
+
+    this.logger.log(`Telegram notifications sent: ${sent} success, ${failed} failed`);
   }
 
   async findAll(params: PaginationParams) {
@@ -77,19 +126,15 @@ export class NotificationsService {
   async getUserNotifications(userId: string, params: PaginationParams) {
     const { page, limit, skip } = getPaginationParams(params);
 
-    const where: Prisma.UserNotificationWhereInput = { userId };
-
     const [userNotifications, total] = await Promise.all([
       this.prisma.userNotification.findMany({
-        where,
+        where: { userId },
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
-        include: {
-          notification: true,
-        },
+        include: { notification: true },
       }),
-      this.prisma.userNotification.count({ where }),
+      this.prisma.userNotification.count({ where: { userId } }),
     ]);
 
     return {

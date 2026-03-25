@@ -28,6 +28,21 @@ export const getNotifications = async (
 export const createNotification = async (
   payload: CreateNotificationDto,
 ): Promise<ApiResponse<Notification>> => {
-  const { data } = await api.post('/notifications', payload);
+  // Transform to backend format
+  const backendPayload = {
+    title: {
+      uz: payload.titleUz,
+      ru: payload.titleRu || payload.titleUz,
+      en: payload.titleEn || payload.titleUz,
+    },
+    message: {
+      uz: payload.messageUz,
+      ru: payload.messageRu || payload.messageUz,
+      en: payload.messageEn || payload.messageUz,
+    },
+    targetType: payload.target,
+    targetId: payload.targetId,
+  };
+  const { data } = await api.post('/notifications', backendPayload);
   return data;
 };
