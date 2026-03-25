@@ -1,8 +1,7 @@
 {
-  "welcome": "<b>🌟 Welcome to SMM Bot!</b>\n\n🆔 ID: <code>{id}</code>\n👤 Name: <b>{name}</b>\n💰 Balance: <b>{balance}</b>\n\n📱 All SMM services for Telegram and Instagram!\n✅ Lowest prices\n✅ Fast delivery\n✅ 24/7 automated system\n\n⬇️ Choose an option below:",
+  "welcome": "<b>Welcome to SMM Bot!</b>\n\nID: <code>{id}</code>\nName: <b>{name}</b>\nBalance: <b>{balance} UZS</b>\n\nSMM services for all social networks!\nTelegram, Instagram, YouTube, TikTok\nFacebook, Twitter, Spotify, Discord\nBest prices | 24/7 automatic\n\nChoose a button below:",
   "welcome_referral": "🎉 You were invited by <b>{referrer}</b>!\n🎁 Bonus added to your balance!",
   "main_menu": "🏠 <b>Main Menu</b>\n\nChoose an option below:",
-
   "menu_sms": "📞 Get Number",
   "menu_services": "🛍 Services",
   "menu_orders": "📋 Orders",
@@ -14,21 +13,18 @@
   "menu_partnership": "🤝 Partnership",
   "menu_discount": "🎫 Discount",
   "menu_language": "🌐 Language",
-
-  "select_platform": "📱 <b>Select platform:</b>\n\nWhich platform do you need?",
+  "select_platform": "<b>Select platform:</b>\n\n8 platforms available!",
   "select_category": "📂 <b>Select category:</b>",
   "select_service": "🔧 <b>Select service:</b>",
   "enter_link": "🔗 <b>Send the link:</b>\n\n📎 Enter channel, group, or profile link",
   "enter_quantity": "🔢 <b>Enter quantity:</b>\n\n├ 📦 Min: <b>{min}</b>\n└ 📦 Max: <b>{max}</b>",
   "invalid_link": "❌ <b>Invalid link!</b>\n\nPlease try again:",
   "invalid_quantity": "❌ Quantity must be between <b>{min}</b> and <b>{max}</b>!",
-
   "order_summary": "📋 <b>Order Details</b>\n\n┌─────────────────────┐\n├ 🔧 Service: <b>{service}</b>\n├ 🔗 Link: <code>{link}</code>\n├ 🔢 Quantity: <b>{quantity}</b>\n├ 💰 Price: <b>{price}</b>\n└ 💳 Balance: <b>{balance}</b>\n└─────────────────────┘\n\nConfirm?",
   "confirm_order": "✅ Confirm",
   "cancel": "❌ Cancel",
   "order_created": "✅ <b>Order created!</b>\n\n🆔 Order: <code>#{orderId}</code>\n⏳ Status: Pending\n\n⏱ Average completion: 5-30 minutes",
   "insufficient_balance": "❌ <b>Insufficient balance!</b>\n\n├ 💰 Required: <b>{required}</b>\n└ 💳 Balance: <b>{balance}</b>\n\n💳 Top up your balance and try again",
-
   "balance_info": "💰 <b>Your Balance</b>\n\n┌─────────────────────┐\n│  💳 <b>{balance}</b>         │\n└─────────────────────┘",
   "balance_with_history": "💰 <b>Your Balance</b>\n\n┌─────────────────────┐\n│  💳 <b>{balance}</b>         │\n└─────────────────────┘\n\n📊 <b>Recent transactions:</b>\n{history}\n\n💳 Press the button to top up:",
   "balance_topup_btn": "💳 Top up balance",
@@ -37,23 +33,18 @@
   "topup_select_method": "💳 <b>Select payment method:</b>\n\nChoose one of the options:",
   "topup_enter_amount": "💰 <b>Enter amount:</b>\n\n├ 📦 Minimum: <b>{min} soum</b>\n└ 💡 Send numbers only",
   "topup_created": "✅ <b>Payment created!</b>\n\n├ 💰 Amount: <b>{amount}</b>\n└ 💳 Method: payment\n\n{paymentInfo}",
-
   "profile_info": "👤 <b>Profile Info</b>\n\n┌─────────────────────┐\n├ 🆔 ID: <code>{id}</code>\n├ 👤 Name: <b>{name}</b>\n├ 💰 Balance: <b>{balance}</b>\n├ 📦 Orders: <b>{orders}</b>\n└ 📅 Registered: <b>{date}</b>\n└─────────────────────┘",
-
   "referral_info": "🎁 <b>Referral Program</b>\n\n📎 <b>Your link:</b>\n<code>{link}</code>\n\n┌─────────────────────┐\n├ 👥 Invited: <b>{count} people</b>\n├ 💰 Total earned: <b>{earned}</b>\n└ 📊 Bonus: <b>{percentage}%</b> from each payment\n└─────────────────────┘\n\n🔄 Invite friends and earn!",
   "referral_copy_btn": "📋 Copy link",
   "referral_share_btn": "📤 Share",
-
   "orders_title": "📋 <b>My Orders</b> ({total})\n",
   "orders_item": "{num}️⃣ <code>#{id}</code> — {status}\n   {icon} {service} — <b>{quantity} pcs</b>\n   💰 <b>{price}</b> — {date}\n",
   "orders_page": "\n📄 Page <b>{page}/{totalPages}</b>",
   "no_orders": "📭 <b>No orders yet</b>\n\nYou haven't placed any orders.\n🛍 Go to Services and make your first order!",
-
   "order_detail": "📋 <b>Order #{id}</b>\n\n┌─────────────────────┐\n├ 🔧 Service: <b>{service}</b>\n├ 🔗 Link: <code>{link}</code>\n├ 🔢 Quantity: <b>{quantity}</b>\n├ 💰 Price: <b>{price}</b>\n├ 📊 Status: {status}\n├ 📅 Date: <b>{date}</b>\n{extra}└─────────────────────┘",
   "order_detail_start": "├ ▶️ Start: <b>{count}</b>\n",
   "order_detail_current": "├ 📊 Current: <b>{count}</b>\n",
   "order_detail_remains": "├ ⏳ Remains: <b>{count}</b>\n",
-
   "order_status_pending": "⏳ Pending",
   "order_status_processing": "🔄 Processing",
   "order_status_in_progress": "▶️ In progress",
@@ -61,22 +52,17 @@
   "order_status_partial": "⚠️ Partially completed",
   "order_status_canceled": "❌ Canceled",
   "order_status_failed": "💔 Failed",
-
   "support_new": "🆘 <b>Support</b>\n\n📝 Write your question or issue.\nWe'll respond as soon as possible!\n\n💬 Send your message:",
   "support_sent": "✅ <b>Message sent!</b>\n\n⏱ We'll respond shortly.\n📩 The reply will come to this bot.",
   "language_select": "🌐 <b>Select language:</b>\n\nTilni tanlang:",
   "language_changed": "✅ <b>Language changed!</b>",
   "back": "⬅️ Back",
-
   "telegram": "📱 Telegram",
   "telegram_desc": "Subscribers, views, reactions",
   "instagram": "📸 Instagram",
   "instagram_desc": "Followers, likes, views, comments",
-
   "order_notification": "📦 <b>Order updated!</b>\n\n🆔 Order: <code>#{orderId}</code>\n📊 New status: {status}",
-
   "service_detail": "{icon} <b>{name}</b>\n\n├ 💰 Price: <b>{price} soum / 1 pc</b>\n├ 📦 Min: <b>{min}</b> | Max: <b>{max}</b>\n├ ⏱ Speed: <b>{speed}</b>\n└ ⭐ Quality: <b>{quality}</b>\n\n🔗 Send channel/group link:",
-
   "sms_title": "📞 <b>Get Number</b>\n\n📱 SMS Activation Service\nChoose a service below:",
   "sms_select_country": "🌍 <b>Select country:</b>\n\nAvailable countries for {service}:",
   "sms_price_confirm": "📞 <b>Buy Number</b>\n\n├ 📱 Service: <b>{service}</b>\n├ 🌍 Country: <b>{country}</b>\n├ 💰 Price: <b>{price} soum</b>\n└ 💳 Balance: <b>{balance}</b>\n\nConfirm?",
@@ -90,20 +76,16 @@
   "sms_buy_btn": "✅ Buy",
   "sms_insufficient_balance": "❌ <b>Insufficient balance!</b>\n\n├ 💰 Required: <b>{price} soum</b>\n└ 💳 Balance: <b>{balance}</b>",
   "sms_error": "❌ <b>An error occurred!</b>\n\nPlease try again later.",
-
   "guide_title": "📕 <b>User Guide</b>\n\n<b>1️⃣ Top up balance</b>\n   💳 Payment → select method → enter amount\n\n<b>2️⃣ Choose a service</b>\n   🛍 Services → platform → category → service\n\n<b>3️⃣ Place an order</b>\n   🔗 Enter link → quantity → confirm\n\n<b>4️⃣ Wait for results</b>\n   ⏱ Average time: 5-30 minutes\n\n<b>5️⃣ Get SMS number</b>\n   📞 Get Number → service → country → buy\n\n❓ Questions: 🆘 Support",
   "guide_back_btn": "⬅️ Main menu",
-
   "partnership_title": "🤝 <b>Partnership Program</b>\n\nYou can also sell SMM services!\n\n📊 <b>Terms:</b>\n• Minimum deposit: <b>500,000 soum</b>\n• Special low prices (<b>-30% discount</b>)\n• Personal manager\n• API access\n\n💰 <b>Income potential:</b>\n• <b>5,000,000+ soum</b> per month\n\n📩 To apply:\nWrite to @smm_admin\n\nOr press the button below:",
   "partnership_apply_btn": "📩 Apply now",
   "partnership_applied": "✅ <b>Application received!</b>\n\n📩 An admin will contact you shortly.",
-
   "discount_title": "🎫 <b>Promo Code</b>\n\nDo you have a promo code? Enter it and get a discount!\n\n📝 Send your promo code:",
   "discount_success": "✅ <b>Promo code applied!</b>\n\n🎫 Code: <code>{code}</code>\n🎁 Discount: <b>{discount}</b>\n💰 Added to your balance!",
   "discount_invalid": "❌ <b>Invalid promo code!</b>\n\nThis promo code was not found or has expired.",
   "discount_already_used": "⚠️ <b>This promo code has already been used!</b>",
   "discount_enter_code": "📝 Enter promo code:",
-
   "payment_click": "💳 Click [Auto]",
   "payment_humo": "🟡 HumoCard",
   "payment_bank": "🏦 Bank Card",

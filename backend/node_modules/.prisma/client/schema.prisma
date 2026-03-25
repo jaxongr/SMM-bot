@@ -17,6 +17,13 @@ enum UserRole {
 enum Platform {
   TELEGRAM
   INSTAGRAM
+  YOUTUBE
+  TIKTOK
+  FACEBOOK
+  TWITTER
+  SPOTIFY
+  DISCORD
+  OTHER
 }
 
 enum OrderStatus {

@@ -1,8 +1,7 @@
 {
-  "welcome": "<b>🌟 SMM Bot ga xush kelibsiz!</b>\n\n🆔 ID: <code>{id}</code>\n👤 Ism: <b>{name}</b>\n💰 Balans: <b>{balance}</b>\n\n📱 Telegram va Instagram uchun barcha SMM xizmatlar!\n✅ Eng arzon narxlar\n✅ Tez yetkazib berish\n✅ 24/7 avtomatik tizim\n\n⬇️ Quyidagi tugmalardan birini tanlang:",
+  "welcome": "<b>SMM Bot ga xush kelibsiz!</b>\n\nID: <code>{id}</code>\nIsm: <b>{name}</b>\nBalans: <b>{balance} som</b>\n\nBarcha ijtimoiy tarmoqlar uchun SMM xizmatlar!\nTelegram, Instagram, YouTube, TikTok\nFacebook, Twitter, Spotify, Discord\nEng arzon narxlar | 24/7 avtomatik\n\nQuyidagi tugmalardan birini tanlang:",
   "welcome_referral": "🎉 Siz <b>{referrer}</b> tomonidan taklif qilindingiz!\n🎁 Bonus balansingizga qo'shildi!",
   "main_menu": "🏠 <b>Asosiy menyu</b>\n\nQuyidagi tugmalardan birini tanlang:",
-
   "menu_sms": "📞 Nomer olish",
   "menu_services": "🛍 Xizmatlar",
   "menu_orders": "📋 Buyurtmalar",
@@ -14,21 +13,18 @@
   "menu_partnership": "🤝 Hamkorlik",
   "menu_discount": "🎫 Chegirma",
   "menu_language": "🌐 Til",
-
-  "select_platform": "📱 <b>Platformani tanlang:</b>\n\nQaysi platforma uchun xizmat kerak?",
+  "select_platform": "<b>Platformani tanlang:</b>\n\n8 ta platforma mavjud!",
   "select_category": "📂 <b>Kategoriyani tanlang:</b>",
   "select_service": "🔧 <b>Xizmatni tanlang:</b>",
   "enter_link": "🔗 <b>Linkni yuboring:</b>\n\n📎 Kanal, guruh yoki profil linkini kiriting",
   "enter_quantity": "🔢 <b>Miqdorni kiriting:</b>\n\n├ 📦 Min: <b>{min}</b>\n└ 📦 Max: <b>{max}</b>",
   "invalid_link": "❌ <b>Noto'g'ri link!</b>\n\nQaytadan to'g'ri link kiriting:",
   "invalid_quantity": "❌ Miqdor <b>{min}</b> dan <b>{max}</b> gacha bo'lishi kerak!",
-
   "order_summary": "📋 <b>Buyurtma ma'lumotlari</b>\n\n┌─────────────────────┐\n├ 🔧 Xizmat: <b>{service}</b>\n├ 🔗 Link: <code>{link}</code>\n├ 🔢 Miqdor: <b>{quantity}</b>\n├ 💰 Narx: <b>{price}</b>\n└ 💳 Balans: <b>{balance}</b>\n└─────────────────────┘\n\nTasdiqlaysizmi?",
   "confirm_order": "✅ Tasdiqlash",
   "cancel": "❌ Bekor qilish",
   "order_created": "✅ <b>Buyurtma yaratildi!</b>\n\n🆔 Buyurtma: <code>#{orderId}</code>\n⏳ Status: Kutilmoqda\n\n⏱ O'rtacha bajarilish vaqti: 5-30 daqiqa",
   "insufficient_balance": "❌ <b>Balansingiz yetarli emas!</b>\n\n├ 💰 Kerak: <b>{required}</b>\n└ 💳 Balans: <b>{balance}</b>\n\n💳 Balansni to'ldiring va qaytadan urinib ko'ring",
-
   "balance_info": "💰 <b>Sizning balansingiz</b>\n\n┌─────────────────────┐\n│  💳 <b>{balance}</b>         │\n└─────────────────────┘",
   "balance_with_history": "💰 <b>Sizning balansingiz</b>\n\n┌─────────────────────┐\n│  💳 <b>{balance}</b>         │\n└─────────────────────┘\n\n📊 <b>Oxirgi operatsiyalar:</b>\n{history}\n\n💳 Balansni to'ldirish uchun tugmani bosing:",
   "balance_topup_btn": "💳 Balansni to'ldirish",
@@ -37,23 +33,18 @@
   "topup_select_method": "💳 <b>To'lov usulini tanlang:</b>\n\nQuyidagi usullardan birini tanlang:",
   "topup_enter_amount": "💰 <b>Summani kiriting:</b>\n\n├ 📦 Minimum: <b>{min} so'm</b>\n└ 💡 Faqat raqam yuboring",
   "topup_created": "✅ <b>To'lov yaratildi!</b>\n\n├ 💰 Summa: <b>{amount}</b>\n└ 💳 Usul: to'lov\n\n{paymentInfo}",
-
   "profile_info": "👤 <b>Profil ma'lumotlari</b>\n\n┌─────────────────────┐\n├ 🆔 ID: <code>{id}</code>\n├ 👤 Ism: <b>{name}</b>\n├ 💰 Balans: <b>{balance}</b>\n├ 📦 Buyurtmalar: <b>{orders}</b>\n└ 📅 Ro'yxatdan: <b>{date}</b>\n└─────────────────────┘",
-
   "referral_info": "🎁 <b>Referal dasturi</b>\n\n📎 <b>Sizning linkingiz:</b>\n<code>{link}</code>\n\n┌─────────────────────┐\n├ 👥 Taklif qilganlar: <b>{count} ta</b>\n├ 💰 Jami daromad: <b>{earned}</b>\n└ 📊 Bonus: Har bir to'lovdan <b>{percentage}%</b>\n└─────────────────────┘\n\n🔄 Do'stlaringizni taklif qiling va daromad oling!",
   "referral_copy_btn": "📋 Linkni nusxalash",
   "referral_share_btn": "📤 Ulashish",
-
   "orders_title": "📋 <b>Buyurtmalarim</b> ({total})\n",
   "orders_item": "{num}️⃣ <code>#{id}</code> — {status}\n   {icon} {service} — <b>{quantity} ta</b>\n   💰 <b>{price}</b> — {date}\n",
   "orders_page": "\n📄 Sahifa <b>{page}/{totalPages}</b>",
   "no_orders": "📭 <b>Buyurtmalar yo'q</b>\n\nSiz hali buyurtma bermadingiz.\n🛍 Xizmatlar bo'limiga o'ting va birinchi buyurtmangizni bering!",
-
   "order_detail": "📋 <b>Buyurtma #{id}</b>\n\n┌─────────────────────┐\n├ 🔧 Xizmat: <b>{service}</b>\n├ 🔗 Link: <code>{link}</code>\n├ 🔢 Miqdor: <b>{quantity}</b>\n├ 💰 Narx: <b>{price}</b>\n├ 📊 Status: {status}\n├ 📅 Sana: <b>{date}</b>\n{extra}└─────────────────────┘",
   "order_detail_start": "├ ▶️ Boshlang'ich: <b>{count}</b>\n",
   "order_detail_current": "├ 📊 Hozirgi: <b>{count}</b>\n",
   "order_detail_remains": "├ ⏳ Qoldiq: <b>{count}</b>\n",
-
   "order_status_pending": "⏳ Kutilmoqda",
   "order_status_processing": "🔄 Qayta ishlanmoqda",
   "order_status_in_progress": "▶️ Jarayonda",
@@ -61,22 +52,17 @@
   "order_status_partial": "⚠️ Qisman bajarildi",
   "order_status_canceled": "❌ Bekor qilindi",
   "order_status_failed": "💔 Xato yuz berdi",
-
   "support_new": "🆘 <b>Qo'llab-quvvatlash</b>\n\n📝 Savolingiz yoki muammoingizni yozing.\nBiz tez orada javob beramiz!\n\n💬 Xabaringizni yuboring:",
   "support_sent": "✅ <b>Xabaringiz yuborildi!</b>\n\n⏱ Tez orada javob beramiz.\n📩 Javob shu botga keladi.",
   "language_select": "🌐 <b>Tilni tanlang:</b>\n\nSelect your language:",
   "language_changed": "✅ <b>Til o'zgartirildi!</b>",
   "back": "⬅️ Orqaga",
-
   "telegram": "📱 Telegram",
   "telegram_desc": "Obunachilar, ko'rishlar, reaksiyalar",
   "instagram": "📸 Instagram",
   "instagram_desc": "Followers, likes, views, comments",
-
   "order_notification": "📦 <b>Buyurtma yangilandi!</b>\n\n🆔 Buyurtma: <code>#{orderId}</code>\n📊 Yangi status: {status}",
-
   "service_detail": "{icon} <b>{name}</b>\n\n├ 💰 Narx: <b>{price} so'm / 1 dona</b>\n├ 📦 Min: <b>{min}</b> | Max: <b>{max}</b>\n├ ⏱ Tezlik: <b>{speed}</b>\n└ ⭐ Sifat: <b>{quality}</b>\n\n🔗 Kanal/guruh linkini yuboring:",
-
   "sms_title": "📞 <b>Nomer olish</b>\n\n📱 SMS aktivatsiya xizmati\nQuyidagi xizmatlardan birini tanlang:",
   "sms_select_country": "🌍 <b>Davlatni tanlang:</b>\n\n{service} uchun mavjud davlatlar:",
   "sms_price_confirm": "📞 <b>Nomer sotib olish</b>\n\n├ 📱 Xizmat: <b>{service}</b>\n├ 🌍 Davlat: <b>{country}</b>\n├ 💰 Narx: <b>{price} so'm</b>\n└ 💳 Balans: <b>{balance}</b>\n\nTasdiqlaysizmi?",
@@ -90,20 +76,16 @@
   "sms_buy_btn": "✅ Sotib olish",
   "sms_insufficient_balance": "❌ <b>Balansingiz yetarli emas!</b>\n\n├ 💰 Kerak: <b>{price} so'm</b>\n└ 💳 Balans: <b>{balance}</b>",
   "sms_error": "❌ <b>Xatolik yuz berdi!</b>\n\nIltimos, keyinroq qaytadan urinib ko'ring.",
-
   "guide_title": "📕 <b>Foydalanish qo'llanmasi</b>\n\n<b>1️⃣ Balansni to'ldiring</b>\n   💳 To'lov → usulni tanlang → summani kiriting\n\n<b>2️⃣ Xizmatni tanlang</b>\n   🛍 Xizmatlar → platform → kategoriya → xizmat\n\n<b>3️⃣ Buyurtma bering</b>\n   🔗 Link kiriting → miqdor → tasdiqlang\n\n<b>4️⃣ Natijani kuting</b>\n   ⏱ O'rtacha 5-30 daqiqa ichida bajariladi\n\n<b>5️⃣ SMS nomer olish</b>\n   📞 Nomer olish → xizmat → davlat → sotib olish\n\n❓ Savol bo'lsa: 🆘 Qo'llab-quvvatlash",
   "guide_back_btn": "⬅️ Asosiy menyu",
-
   "partnership_title": "🤝 <b>Hamkorlik dasturi</b>\n\nSiz ham SMM xizmatlarni sotishingiz mumkin!\n\n📊 <b>Shartlar:</b>\n• Minimal depozit: <b>500,000 so'm</b>\n• Maxsus arzon narxlar (<b>-30% chegirma</b>)\n• Shaxsiy menejer\n• API kirish imkoniyati\n\n💰 <b>Daromad imkoniyati:</b>\n• Oyiga <b>5,000,000+ so'm</b>\n\n📩 Ariza qoldirish uchun:\n@smm_admin ga yozing\n\nYoki quyidagi tugmani bosing:",
   "partnership_apply_btn": "📩 Ariza qoldirish",
   "partnership_applied": "✅ <b>Arizangiz qabul qilindi!</b>\n\n📩 Tez orada admin siz bilan bog'lanadi.",
-
   "discount_title": "🎫 <b>Promo kod</b>\n\nSizda promo kod bormi? Uni kiriting va chegirmadan foydalaning!\n\n📝 Promo kodni yuboring:",
   "discount_success": "✅ <b>Promo kod qo'llandi!</b>\n\n🎫 Kod: <code>{code}</code>\n🎁 Chegirma: <b>{discount}</b>\n💰 Balansingizga qo'shildi!",
   "discount_invalid": "❌ <b>Noto'g'ri promo kod!</b>\n\nBu promo kod topilmadi yoki muddati o'tgan.",
   "discount_already_used": "⚠️ <b>Bu promo kod allaqachon ishlatilgan!</b>",
   "discount_enter_code": "📝 Promo kodni kiriting:",
-
   "payment_click": "💳 Click [Avto]",
   "payment_humo": "🟡 HumoCard",
   "payment_bank": "🏦 Bank Karta",

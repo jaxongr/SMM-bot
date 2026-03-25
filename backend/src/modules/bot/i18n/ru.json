@@ -1,8 +1,7 @@
 {
-  "welcome": "<b>🌟 Добро пожаловать в SMM Bot!</b>\n\n🆔 ID: <code>{id}</code>\n👤 Имя: <b>{name}</b>\n💰 Баланс: <b>{balance}</b>\n\n📱 Все SMM услуги для Telegram и Instagram!\n✅ Самые низкие цены\n✅ Быстрая доставка\n✅ Автоматическая система 24/7\n\n⬇️ Выберите нужную кнопку:",
+  "welcome": "<b>Dobro pozhalovat v SMM Bot!</b>\n\nID: <code>{id}</code>\nImya: <b>{name}</b>\nBalans: <b>{balance} sum</b>\n\nSMM uslugi dlya vsekh socsetej!\nTelegram, Instagram, YouTube, TikTok\nFacebook, Twitter, Spotify, Discord\nLuchshie ceny | 24/7 avtomatika\n\nVyberite knopku nizhe:",
   "welcome_referral": "🎉 Вас пригласил <b>{referrer}</b>!\n🎁 Бонус добавлен на ваш баланс!",
   "main_menu": "🏠 <b>Главное меню</b>\n\nВыберите нужную кнопку:",
-
   "menu_sms": "📞 Получить номер",
   "menu_services": "🛍 Услуги",
   "menu_orders": "📋 Заказы",
@@ -14,21 +13,18 @@
   "menu_partnership": "🤝 Партнёрство",
   "menu_discount": "🎫 Скидка",
   "menu_language": "🌐 Язык",
-
-  "select_platform": "📱 <b>Выберите платформу:</b>\n\nДля какой платформы нужна услуга?",
+  "select_platform": "<b>Vyberite platformu:</b>\n\n8 platform dostupno!",
   "select_category": "📂 <b>Выберите категорию:</b>",
   "select_service": "🔧 <b>Выберите услугу:</b>",
   "enter_link": "🔗 <b>Отправьте ссылку:</b>\n\n📎 Введите ссылку на канал, группу или профиль",
   "enter_quantity": "🔢 <b>Введите количество:</b>\n\n├ 📦 Мин: <b>{min}</b>\n└ 📦 Макс: <b>{max}</b>",
   "invalid_link": "❌ <b>Неверная ссылка!</b>\n\nПопробуйте ещё раз:",
   "invalid_quantity": "❌ Количество должно быть от <b>{min}</b> до <b>{max}</b>!",
-
   "order_summary": "📋 <b>Данные заказа</b>\n\n┌─────────────────────┐\n├ 🔧 Услуга: <b>{service}</b>\n├ 🔗 Ссылка: <code>{link}</code>\n├ 🔢 Количество: <b>{quantity}</b>\n├ 💰 Цена: <b>{price}</b>\n└ 💳 Баланс: <b>{balance}</b>\n└─────────────────────┘\n\nПодтверждаете?",
   "confirm_order": "✅ Подтвердить",
   "cancel": "❌ Отменить",
   "order_created": "✅ <b>Заказ создан!</b>\n\n🆔 Заказ: <code>#{orderId}</code>\n⏳ Статус: Ожидание\n\n⏱ Среднее время выполнения: 5-30 минут",
   "insufficient_balance": "❌ <b>Недостаточно средств!</b>\n\n├ 💰 Нужно: <b>{required}</b>\n└ 💳 Баланс: <b>{balance}</b>\n\n💳 Пополните баланс и попробуйте снова",
-
   "balance_info": "💰 <b>Ваш баланс</b>\n\n┌─────────────────────┐\n│  💳 <b>{balance}</b>         │\n└─────────────────────┘",
   "balance_with_history": "💰 <b>Ваш баланс</b>\n\n┌─────────────────────┐\n│  💳 <b>{balance}</b>         │\n└─────────────────────┘\n\n📊 <b>Последние операции:</b>\n{history}\n\n💳 Для пополнения нажмите кнопку:",
   "balance_topup_btn": "💳 Пополнить баланс",
@@ -37,23 +33,18 @@
   "topup_select_method": "💳 <b>Выберите способ оплаты:</b>\n\nВыберите один из способов:",
   "topup_enter_amount": "💰 <b>Введите сумму:</b>\n\n├ 📦 Минимум: <b>{min} сум</b>\n└ 💡 Отправьте только число",
   "topup_created": "✅ <b>Платёж создан!</b>\n\n├ 💰 Сумма: <b>{amount}</b>\n└ 💳 Способ: оплата\n\n{paymentInfo}",
-
   "profile_info": "👤 <b>Данные профиля</b>\n\n┌─────────────────────┐\n├ 🆔 ID: <code>{id}</code>\n├ 👤 Имя: <b>{name}</b>\n├ 💰 Баланс: <b>{balance}</b>\n├ 📦 Заказы: <b>{orders}</b>\n└ 📅 Регистрация: <b>{date}</b>\n└─────────────────────┘",
-
   "referral_info": "🎁 <b>Реферальная программа</b>\n\n📎 <b>Ваша ссылка:</b>\n<code>{link}</code>\n\n┌─────────────────────┐\n├ 👥 Приглашённых: <b>{count} чел.</b>\n├ 💰 Общий доход: <b>{earned}</b>\n└ 📊 Бонус: С каждой оплаты <b>{percentage}%</b>\n└─────────────────────┘\n\n🔄 Приглашайте друзей и зарабатывайте!",
   "referral_copy_btn": "📋 Скопировать ссылку",
   "referral_share_btn": "📤 Поделиться",
-
   "orders_title": "📋 <b>Мои заказы</b> ({total})\n",
   "orders_item": "{num}️⃣ <code>#{id}</code> — {status}\n   {icon} {service} — <b>{quantity} шт.</b>\n   💰 <b>{price}</b> — {date}\n",
   "orders_page": "\n📄 Страница <b>{page}/{totalPages}</b>",
   "no_orders": "📭 <b>Заказов нет</b>\n\nВы ещё не делали заказов.\n🛍 Перейдите в раздел Услуги и сделайте первый заказ!",
-
   "order_detail": "📋 <b>Заказ #{id}</b>\n\n┌─────────────────────┐\n├ 🔧 Услуга: <b>{service}</b>\n├ 🔗 Ссылка: <code>{link}</code>\n├ 🔢 Количество: <b>{quantity}</b>\n├ 💰 Цена: <b>{price}</b>\n├ 📊 Статус: {status}\n├ 📅 Дата: <b>{date}</b>\n{extra}└─────────────────────┘",
   "order_detail_start": "├ ▶️ Начало: <b>{count}</b>\n",
   "order_detail_current": "├ 📊 Текущий: <b>{count}</b>\n",
   "order_detail_remains": "├ ⏳ Остаток: <b>{count}</b>\n",
-
   "order_status_pending": "⏳ Ожидание",
   "order_status_processing": "🔄 Обработка",
   "order_status_in_progress": "▶️ В процессе",
@@ -61,22 +52,17 @@
   "order_status_partial": "⚠️ Частично выполнен",
   "order_status_canceled": "❌ Отменён",
   "order_status_failed": "💔 Ошибка",
-
   "support_new": "🆘 <b>Поддержка</b>\n\n📝 Напишите ваш вопрос или проблему.\nМы ответим в кратчайшие сроки!\n\n💬 Отправьте сообщение:",
   "support_sent": "✅ <b>Сообщение отправлено!</b>\n\n⏱ Мы ответим в ближайшее время.\n📩 Ответ придёт в этот бот.",
   "language_select": "🌐 <b>Выберите язык:</b>\n\nTilni tanlang:",
   "language_changed": "✅ <b>Язык изменён!</b>",
   "back": "⬅️ Назад",
-
   "telegram": "📱 Telegram",
   "telegram_desc": "Подписчики, просмотры, реакции",
   "instagram": "📸 Instagram",
   "instagram_desc": "Followers, likes, views, comments",
-
   "order_notification": "📦 <b>Заказ обновлён!</b>\n\n🆔 Заказ: <code>#{orderId}</code>\n📊 Новый статус: {status}",
-
   "service_detail": "{icon} <b>{name}</b>\n\n├ 💰 Цена: <b>{price} сум / 1 шт.</b>\n├ 📦 Мин: <b>{min}</b> | Макс: <b>{max}</b>\n├ ⏱ Скорость: <b>{speed}</b>\n└ ⭐ Качество: <b>{quality}</b>\n\n🔗 Отправьте ссылку на канал/группу:",
-
   "sms_title": "📞 <b>Получить номер</b>\n\n📱 Сервис SMS-активации\nВыберите нужный сервис:",
   "sms_select_country": "🌍 <b>Выберите страну:</b>\n\nДоступные страны для {service}:",
   "sms_price_confirm": "📞 <b>Покупка номера</b>\n\n├ 📱 Сервис: <b>{service}</b>\n├ 🌍 Страна: <b>{country}</b>\n├ 💰 Цена: <b>{price} сум</b>\n└ 💳 Баланс: <b>{balance}</b>\n\nПодтверждаете?",
@@ -90,20 +76,16 @@
   "sms_buy_btn": "✅ Купить",
   "sms_insufficient_balance": "❌ <b>Недостаточно средств!</b>\n\n├ 💰 Нужно: <b>{price} сум</b>\n└ 💳 Баланс: <b>{balance}</b>",
   "sms_error": "❌ <b>Произошла ошибка!</b>\n\nПожалуйста, попробуйте позже.",
-
   "guide_title": "📕 <b>Руководство пользователя</b>\n\n<b>1️⃣ Пополните баланс</b>\n   💳 Оплата → выберите способ → введите сумму\n\n<b>2️⃣ Выберите услугу</b>\n   🛍 Услуги → платформа → категория → услуга\n\n<b>3️⃣ Сделайте заказ</b>\n   🔗 Введите ссылку → количество → подтвердите\n\n<b>4️⃣ Ожидайте результат</b>\n   ⏱ Среднее время: 5-30 минут\n\n<b>5️⃣ Получить SMS номер</b>\n   📞 Получить номер → сервис → страна → купить\n\n❓ Вопросы: 🆘 Поддержка",
   "guide_back_btn": "⬅️ Главное меню",
-
   "partnership_title": "🤝 <b>Партнёрская программа</b>\n\nВы тоже можете продавать SMM услуги!\n\n📊 <b>Условия:</b>\n• Минимальный депозит: <b>500 000 сум</b>\n• Специальные низкие цены (<b>-30% скидка</b>)\n• Персональный менеджер\n• Доступ к API\n\n💰 <b>Возможный доход:</b>\n• <b>5 000 000+ сум</b> в месяц\n\n📩 Для подачи заявки:\nНапишите @smm_admin\n\nИли нажмите кнопку ниже:",
   "partnership_apply_btn": "📩 Подать заявку",
   "partnership_applied": "✅ <b>Заявка принята!</b>\n\n📩 Администратор свяжется с вами в ближайшее время.",
-
   "discount_title": "🎫 <b>Промокод</b>\n\nУ вас есть промокод? Введите его и получите скидку!\n\n📝 Отправьте промокод:",
   "discount_success": "✅ <b>Промокод применён!</b>\n\n🎫 Код: <code>{code}</code>\n🎁 Скидка: <b>{discount}</b>\n💰 Добавлено на баланс!",
   "discount_invalid": "❌ <b>Неверный промокод!</b>\n\nДанный промокод не найден или истёк.",
   "discount_already_used": "⚠️ <b>Этот промокод уже использован!</b>",
   "discount_enter_code": "📝 Введите промокод:",
-
   "payment_click": "💳 Click [Авто]",
   "payment_humo": "🟡 HumoCard",
   "payment_bank": "🏦 Банк карта",

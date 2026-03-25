@@ -3,15 +3,17 @@ import { translate } from '../middlewares/i18n.middleware';
 
 export function platformKeyboard(lang: string): InlineKeyboard {
   return new InlineKeyboard()
-    .text(
-      `📱 Telegram — ${translate('telegram_desc', lang)}`,
-      'platform:TELEGRAM',
-    )
+    .text('📱 Telegram', 'platform:TELEGRAM')
+    .text('📸 Instagram', 'platform:INSTAGRAM')
     .row()
-    .text(
-      `📸 Instagram — ${translate('instagram_desc', lang)}`,
-      'platform:INSTAGRAM',
-    );
+    .text('🎬 YouTube', 'platform:YOUTUBE')
+    .text('🎵 TikTok', 'platform:TIKTOK')
+    .row()
+    .text('👤 Facebook', 'platform:FACEBOOK')
+    .text('🐦 Twitter/X', 'platform:TWITTER')
+    .row()
+    .text('🎧 Spotify', 'platform:SPOTIFY')
+    .text('💬 Discord', 'platform:DISCORD');
 }
 
 export function categoryKeyboard(
