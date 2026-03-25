@@ -5,6 +5,9 @@ export interface SessionData {
   language: string;
   userId?: string;
   smsService?: string;
+  waitingPaymentAmount?: boolean;
+  waitingPaymentReceipt?: boolean;
+  pendingPaymentAmount?: number;
 }
 
 export interface BotUserData {

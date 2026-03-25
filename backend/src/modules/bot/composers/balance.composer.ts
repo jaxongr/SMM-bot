@@ -90,14 +90,14 @@ export function createBalanceComposer(
 
     // Set session flag to capture next message as payment amount
     if (ctx.session) {
-      (ctx.session as Record<string, unknown>).waitingPaymentAmount = true;
+      ctx.session.waitingPaymentAmount = true;
     }
     await ctx.answerCallbackQuery();
   });
 
   // Capture payment amount and receipt
   composer.on('message:text', async (ctx, next) => {
-    if (!(ctx.session as Record<string, unknown>)?.waitingPaymentAmount) {
+    if (!ctx.session?.waitingPaymentAmount) {
       return next();
     }
 
@@ -110,9 +110,9 @@ export function createBalanceComposer(
       return;
     }
 
-    (ctx.session as Record<string, unknown>).waitingPaymentAmount = false;
-    (ctx.session as Record<string, unknown>).pendingPaymentAmount = amount;
-    (ctx.session as Record<string, unknown>).waitingPaymentReceipt = true;
+    ctx.session.waitingPaymentAmount = false;
+    ctx.session.pendingPaymentAmount = amount;
+    ctx.session.waitingPaymentReceipt = true;
 
     await ctx.reply(
       `<b>💰 Summa: ${formatPrice(amount)}</b>\n\n` +
@@ -124,15 +124,15 @@ export function createBalanceComposer(
 
   // Capture receipt photo
   composer.on('message:photo', async (ctx, next) => {
-    if (!(ctx.session as Record<string, unknown>)?.waitingPaymentReceipt) {
+    if (!ctx.session?.waitingPaymentReceipt) {
       return next();
     }
 
     if (!ctx.user) return;
 
-    const amount = (ctx.session as Record<string, unknown>).pendingPaymentAmount as number || 0;
-    (ctx.session as Record<string, unknown>).waitingPaymentReceipt = false;
-    (ctx.session as Record<string, unknown>).pendingPaymentAmount = 0;
+    const amount = ctx.session.pendingPaymentAmount as number || 0;
+    ctx.session.waitingPaymentReceipt = false;
+    ctx.session.pendingPaymentAmount = 0;
 
     const photo = ctx.message.photo;
     const fileId = photo[photo.length - 1].file_id;
