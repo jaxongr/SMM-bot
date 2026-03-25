@@ -95,8 +95,9 @@ export function createBalanceComposer(
     await ctx.answerCallbackQuery();
   });
 
-  // Capture payment amount and receipt
+  // Capture payment amount
   composer.on('message:text', async (ctx, next) => {
+    logger.log(`Text received: "${ctx.message.text}", waitingAmount=${ctx.session?.waitingPaymentAmount}, waitingReceipt=${ctx.session?.waitingPaymentReceipt}`);
     if (!ctx.session?.waitingPaymentAmount) {
       return next();
     }
@@ -124,6 +125,7 @@ export function createBalanceComposer(
 
   // Capture receipt photo
   composer.on('message:photo', async (ctx, next) => {
+    logger.log(`Photo received, waitingReceipt=${ctx.session?.waitingPaymentReceipt}`);
     if (!ctx.session?.waitingPaymentReceipt) {
       return next();
     }

@@ -75,6 +75,9 @@ export class BotService implements OnModuleInit, OnModuleDestroy {
   }
 
   private setupComposers(): void {
+    // Balance and topup flow — MUST be before menu to capture payment amount/receipt
+    this.bot.use(createBalanceComposer(this.balanceService, this.paymentsService, this.prisma));
+
     // Start command
     this.bot.use(createStartComposer(this.usersService));
 
@@ -86,9 +89,6 @@ export class BotService implements OnModuleInit, OnModuleDestroy {
 
     // Order flow (with conversations)
     this.bot.use(createOrderComposer(this.servicesService, this.prisma, this.balanceService));
-
-    // Balance and topup flow
-    this.bot.use(createBalanceComposer(this.balanceService, this.paymentsService, this.prisma));
 
     // Order history
     this.bot.use(createHistoryComposer(this.prisma));
