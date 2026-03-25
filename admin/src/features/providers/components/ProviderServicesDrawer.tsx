@@ -20,8 +20,8 @@ const ProviderServicesDrawer: React.FC<ProviderServicesDrawerProps> = ({
   const columns: ColumnsType<ProviderService> = [
     {
       title: 'Ext. ID',
-      dataIndex: 'externalId',
-      key: 'externalId',
+      dataIndex: 'externalServiceId',
+      key: 'externalServiceId',
       width: 80,
     },
     {
@@ -34,30 +34,27 @@ const ProviderServicesDrawer: React.FC<ProviderServicesDrawerProps> = ({
       title: 'Category',
       dataIndex: 'category',
       key: 'category',
-      render: (cat: string) => <Tag>{cat}</Tag>,
+      render: (cat: string | null) => cat ? <Tag>{cat}</Tag> : '-',
     },
     {
       title: 'Rate',
-      dataIndex: 'rate',
-      key: 'rate',
-      render: (rate: number) => `$${rate.toFixed(4)}`,
+      dataIndex: 'pricePerUnit',
+      key: 'pricePerUnit',
+      render: (rate: string | number | null) =>
+        rate !== null && rate !== undefined ? `$${Number(rate).toFixed(4)}` : '-',
     },
     {
       title: 'Min',
-      dataIndex: 'minOrder',
-      key: 'minOrder',
+      dataIndex: 'minQuantity',
+      key: 'minQuantity',
+      render: (val: number | null) => val ?? '-',
     },
     {
       title: 'Max',
-      dataIndex: 'maxOrder',
-      key: 'maxOrder',
-      render: (val: number) => val.toLocaleString(),
-    },
-    {
-      title: 'Type',
-      dataIndex: 'type',
-      key: 'type',
-      render: (type: string) => <Tag color="blue">{type}</Tag>,
+      dataIndex: 'maxQuantity',
+      key: 'maxQuantity',
+      render: (val: number | null) =>
+        val !== null && val !== undefined ? Number(val).toLocaleString() : '-',
     },
   ];
 
