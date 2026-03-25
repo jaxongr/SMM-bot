@@ -4,6 +4,7 @@ import {
   ShoppingCartOutlined,
   DollarOutlined,
   ThunderboltOutlined,
+  WalletOutlined,
 } from '@ant-design/icons';
 import { StatCard } from '@/shared/components/StatCard';
 import { useDashboardStats } from '@/features/dashboard/hooks/useDashboardStats';
@@ -16,39 +17,51 @@ export function StatsCards() {
 
   return (
     <Row gutter={[16, 16]}>
-      <Col xs={24} sm={12} lg={6}>
+      <Col xs={24} sm={12} lg={4}>
         <StatCard
           icon={<UserOutlined />}
-          title="Jami foydalanuvchilar"
+          title="Foydalanuvchilar"
           value={stats ? formatNumber(stats.totalUsers) : '-'}
-          change={stats?.usersChange}
           loading={isLoading}
         />
       </Col>
-      <Col xs={24} sm={12} lg={6}>
+      <Col xs={24} sm={12} lg={4}>
         <StatCard
           icon={<ShoppingCartOutlined />}
           title="Bugungi buyurtmalar"
-          value={stats ? formatNumber(stats.todayOrders) : '-'}
-          change={stats?.ordersChange}
+          value={stats ? formatNumber(stats.ordersToday || stats.todayOrders || 0) : '-'}
           loading={isLoading}
         />
       </Col>
-      <Col xs={24} sm={12} lg={6}>
+      <Col xs={24} sm={12} lg={4}>
         <StatCard
           icon={<DollarOutlined />}
           title="Umumiy daromad"
-          value={stats ? formatPrice(Number(stats.totalRevenue)) : '-'}
-          change={stats?.revenueChange}
+          value={stats ? formatPrice(Number(stats.totalRevenue || 0)) : '-'}
           loading={isLoading}
         />
       </Col>
-      <Col xs={24} sm={12} lg={6}>
+      <Col xs={24} sm={12} lg={4}>
         <StatCard
           icon={<ThunderboltOutlined />}
           title="Faol buyurtmalar"
-          value={stats ? formatNumber(stats.activeOrders) : '-'}
-          change={stats?.activeOrdersChange}
+          value={stats ? formatNumber(stats.activeOrders || 0) : '-'}
+          loading={isLoading}
+        />
+      </Col>
+      <Col xs={24} sm={12} lg={4}>
+        <StatCard
+          icon={<WalletOutlined />}
+          title="Provayeder balans"
+          value={stats?.totalProviderBalance !== undefined ? `$${Number(stats.totalProviderBalance).toFixed(2)}` : '-'}
+          loading={isLoading}
+        />
+      </Col>
+      <Col xs={24} sm={12} lg={4}>
+        <StatCard
+          icon={<DollarOutlined />}
+          title="Bugungi daromad"
+          value={stats ? formatPrice(Number(stats.revenueToday || 0)) : '-'}
           loading={isLoading}
         />
       </Col>

@@ -93,8 +93,32 @@ export class StatisticsService implements OnModuleInit, OnModuleDestroy {
           createdAt: { gte: startOfMonth },
         },
       }),
-      this.prisma.provider.aggregate({ _sum: { balance: true } }),
+      this.prisma.provider.findMany({ where: { isActive: true } }),
     ]);
+
+    // Fetch real balances from provider APIs
+    let realProviderBalance = 0;
+    for (const provider of providerBalances) {
+      try {
+        const resp = await fetch(provider.apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `key=${provider.apiKey}&action=balance`,
+        });
+        const result = await resp.json() as Record<string, unknown>;
+        if (result.balance) {
+          const bal = parseFloat(String(result.balance));
+          realProviderBalance += bal;
+          // Update DB too
+          await this.prisma.provider.update({
+            where: { id: provider.id },
+            data: { balance: bal },
+          });
+        }
+      } catch {
+        realProviderBalance += Number(provider.balance);
+      }
+    }
 
     const stats: DashboardStats = {
       totalUsers,
@@ -108,7 +132,7 @@ export class StatisticsService implements OnModuleInit, OnModuleDestroy {
       revenueToday: Number(revenueToday._sum.totalPrice || 0),
       revenueThisWeek: Number(revenueThisWeek._sum.totalPrice || 0),
       revenueThisMonth: Number(revenueThisMonth._sum.totalPrice || 0),
-      totalProviderBalance: Number(providerBalances._sum.balance || 0),
+      totalProviderBalance: realProviderBalance,
     };
 
     await this.setCache(cacheKey, stats);
