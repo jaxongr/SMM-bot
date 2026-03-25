@@ -77,16 +77,71 @@ export function createBalanceComposer(
     await ctx.answerCallbackQuery();
   });
 
-  // To'lov qildim — admin xabar oladi
+  // To'lov qildim — summa so'rash
   composer.callbackQuery('topup:card:done', async (ctx) => {
     if (!ctx.user) return;
 
+    await ctx.editMessageText(
+      '<b>💰 To\'lov summasini kiriting:</b>\n\n' +
+      'Necha so\'m o\'tkazdingiz? Raqam kiriting.\n' +
+      'Masalan: <code>50000</code>',
+      { parse_mode: 'HTML' },
+    );
+
+    // Set session flag to capture next message as payment amount
+    if (ctx.session) {
+      (ctx.session as Record<string, unknown>).waitingPaymentAmount = true;
+    }
+    await ctx.answerCallbackQuery();
+  });
+
+  // Capture payment amount and receipt
+  composer.on('message:text', async (ctx, next) => {
+    if (!(ctx.session as Record<string, unknown>)?.waitingPaymentAmount) {
+      return next();
+    }
+
+    const amount = parseInt(ctx.message.text.replace(/\s/g, ''), 10);
+    if (isNaN(amount) || amount < 1000) {
+      await ctx.reply(
+        '❌ Noto\'g\'ri summa! Minimal 1,000 so\'m.\nQaytadan kiriting:',
+        { parse_mode: 'HTML' },
+      );
+      return;
+    }
+
+    (ctx.session as Record<string, unknown>).waitingPaymentAmount = false;
+    (ctx.session as Record<string, unknown>).pendingPaymentAmount = amount;
+    (ctx.session as Record<string, unknown>).waitingPaymentReceipt = true;
+
+    await ctx.reply(
+      `<b>💰 Summa: ${formatPrice(amount)}</b>\n\n` +
+      '📸 Endi to\'lov chekini (screenshot) yuboring:\n\n' +
+      '⚠️ Cheksiz to\'lov tasdiqlanmaydi!',
+      { parse_mode: 'HTML' },
+    );
+  });
+
+  // Capture receipt photo
+  composer.on('message:photo', async (ctx, next) => {
+    if (!(ctx.session as Record<string, unknown>)?.waitingPaymentReceipt) {
+      return next();
+    }
+
+    if (!ctx.user) return;
+
+    const amount = (ctx.session as Record<string, unknown>).pendingPaymentAmount as number || 0;
+    (ctx.session as Record<string, unknown>).waitingPaymentReceipt = false;
+    (ctx.session as Record<string, unknown>).pendingPaymentAmount = 0;
+
+    const photo = ctx.message.photo;
+    const fileId = photo[photo.length - 1].file_id;
+
     try {
-      // Payment record yaratish
       await prisma.payment.create({
         data: {
           userId: ctx.user.id,
-          amount: 0, // admin to'g'rilaydi
+          amount,
           method: 'BANK',
           status: 'PENDING',
           metadata: {
@@ -94,28 +149,30 @@ export function createBalanceComposer(
             telegramId: ctx.user.telegramId.toString(),
             username: ctx.user.username || '',
             firstName: ctx.user.firstName || '',
+            receiptFileId: fileId,
           },
         },
       });
 
-      await ctx.editMessageText(
-        '<b>✅ So\'rovingiz qabul qilindi!</b>\n\n' +
-        '📋 Admin to\'lovni tekshirmoqda...\n' +
-        '⏱ O\'rtacha kutish: <b>5-30 daqiqa</b>\n\n' +
-        '💡 Tezroq tasdiqlash uchun to\'lov chekini\n' +
-        '📸 shu yerga rasm sifatida yuboring.',
-        { parse_mode: 'HTML' },
+      const lang = getLang(ctx);
+      await ctx.reply(
+        '<b>✅ To\'lov so\'rovi qabul qilindi!</b>\n\n' +
+        `💰 Summa: <b>${formatPrice(amount)}</b>\n` +
+        '📸 Chek: Qabul qilindi\n\n' +
+        '⏱ Admin tekshirib, <b>5-30 daqiqa</b> ichida\n' +
+        'balansingizni to\'ldiradi.\n\n' +
+        '📋 Holat: <b>Kutilmoqda...</b>',
+        {
+          parse_mode: 'HTML',
+          reply_markup: mainMenuKeyboard(lang),
+        },
       );
 
-      logger.log(`Card payment request: user=${ctx.user.id}, tg=${ctx.user.telegramId}`);
+      logger.log(`Card payment: user=${ctx.user.id}, amount=${amount}, receipt=${fileId}`);
     } catch (error) {
-      logger.error(`Payment request failed: ${error}`);
-      await ctx.editMessageText(
-        '❌ Xatolik yuz berdi. Iltimos qaytadan urinib ko\'ring.',
-        { parse_mode: 'HTML' },
-      );
+      logger.error(`Payment creation failed: ${error}`);
+      await ctx.reply('❌ Xatolik yuz berdi. Qaytadan urinib ko\'ring.');
     }
-    await ctx.answerCallbackQuery();
   });
 
   // Click to'lov
