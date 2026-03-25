@@ -9,9 +9,18 @@ import { PrismaService } from '../../../prisma/prisma.service';
 
 const logger = new Logger('BalanceComposer');
 
-// Admin karta raqami — admin paneldan o'zgartirish mumkin
-const ADMIN_CARD_NUMBER = '8600 1234 5678 9012';
-const ADMIN_CARD_HOLDER = 'SMM Bot Admin';
+async function getCardInfo(prisma: PrismaService): Promise<{ number: string; holder: string }> {
+  try {
+    const cardNumber = await prisma.setting.findUnique({ where: { key: 'payment_card_number' } });
+    const cardHolder = await prisma.setting.findUnique({ where: { key: 'payment_card_holder' } });
+    return {
+      number: (cardNumber?.value as string) || '8600 0000 0000 0000',
+      holder: (cardHolder?.value as string) || 'SMM Bot Admin',
+    };
+  } catch {
+    return { number: '8600 0000 0000 0000', holder: 'SMM Bot Admin' };
+  }
+}
 
 export function createBalanceComposer(
   balanceService: BalanceService,
@@ -47,6 +56,7 @@ export function createBalanceComposer(
 
   // Bank karta to'lov
   composer.callbackQuery('topup:card', async (ctx) => {
+    const card = await getCardInfo(prisma);
     const keyboard = new InlineKeyboard()
       .text('✅ To\'lov qildim', 'topup:card:done')
       .row()
@@ -55,8 +65,8 @@ export function createBalanceComposer(
     await ctx.editMessageText(
       '<b>🏦 Bank karta orqali to\'lov</b>\n\n' +
       '📋 Quyidagi karta raqamga pul o\'tkazing:\n\n' +
-      `💳 Karta: <code>${ADMIN_CARD_NUMBER}</code>\n` +
-      `👤 Egasi: <b>${ADMIN_CARD_HOLDER}</b>\n\n` +
+      `💳 Karta: <code>${card.number}</code>\n` +
+      `👤 Egasi: <b>${card.holder}</b>\n\n` +
       '⚠️ <b>Muhim:</b>\n' +
       '• Minimal summa: <b>1,000 so\'m</b>\n' +
       '• To\'lovdan keyin "✅ To\'lov qildim" tugmasini bosing\n' +
