@@ -290,6 +290,7 @@ export function createOrderComposer(
               logger.error(`Provider rejected order: ${JSON.stringify(apiResult)}`);
             }
           }
+        }
       } catch (providerError) {
         logger.error(`Provider send failed: ${providerError}`);
       }
