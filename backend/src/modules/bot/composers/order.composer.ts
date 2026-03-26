@@ -247,12 +247,18 @@ export function createOrderComposer(
         });
 
         if (mapping && mapping.provider.isActive) {
+          // Paketlar uchun provayeder minimal miqdorini ishlatish
+          const isPackage = svc.minQuantity === 1 && svc.maxQuantity <= 10;
+          const providerQty = isPackage
+            ? Math.max(mapping.providerService.minQuantity, 100)
+            : quantity;
+
           const params = new URLSearchParams({
             key: mapping.provider.apiKey,
             action: 'add',
             service: mapping.providerService.externalServiceId,
             link,
-            quantity: quantity.toString(),
+            quantity: providerQty.toString(),
           });
 
           const resp = await fetch(mapping.provider.apiUrl, {
