@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import { BotContext } from '../types/context.type';
 import { mainMenuKeyboard } from '../keyboards/main-menu.keyboard';
 import { formatPrice } from '../utils/format-message';
+import { getPackageContents, sendPackageToProvider } from '../utils/package-orders';
 import { t, getLang } from '../utils/i18n.helper';
 import { ServicesService } from '../../services/services.service';
 import { PrismaService } from '../../../prisma/prisma.service';
@@ -239,61 +240,72 @@ export function createOrderComposer(
 
       // Send to provider automatically
       let providerStatus = '⏳ Kutilmoqda';
+      let packageResults: string[] = [];
+      const isPackage = svc.minQuantity === 1 && svc.maxQuantity <= 10;
+      const packageContents = getPackageContents(name);
+
       try {
-        const mapping = await prisma.serviceProviderMapping.findFirst({
-          where: { serviceId, isActive: true },
-          include: { providerService: true, provider: true },
-          orderBy: { priority: 'desc' },
-        });
-
-        if (mapping && mapping.provider.isActive) {
-          // Paketlar uchun provayeder minimal miqdorini ishlatish
-          const isPackage = svc.minQuantity === 1 && svc.maxQuantity <= 10;
-          const providerQty = isPackage
-            ? Math.max(mapping.providerService.minQuantity, 100)
-            : quantity;
-
-          const params = new URLSearchParams({
-            key: mapping.provider.apiKey,
-            action: 'add',
-            service: mapping.providerService.externalServiceId,
-            link,
-            quantity: providerQty.toString(),
+        if (isPackage && packageContents) {
+          // PAKET — barcha xizmatlarni alohida yuborish
+          const result = await sendPackageToProvider(prisma, order.id, link, name);
+          packageResults = result.results;
+          providerStatus = result.success ? '🔄 Barcha xizmatlar yuborildi' : '⚠️ Ba\'zi xizmatlar yuborilmadi';
+          logger.log(`Package order sent: ${name}, success=${result.success}`);
+        } else {
+          // ODDIY XIZMAT — bitta provayederga yuborish
+          const mapping = await prisma.serviceProviderMapping.findFirst({
+            where: { serviceId, isActive: true },
+            include: { providerService: true, provider: true },
+            orderBy: { priority: 'desc' },
           });
 
-          const resp = await fetch(mapping.provider.apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: params.toString(),
-          });
-          const apiResult = await resp.json() as Record<string, unknown>;
-
-          if (apiResult.order) {
-            await prisma.order.update({
-              where: { id: order.id },
-              data: {
-                status: 'PROCESSING',
-                providerId: mapping.provider.id,
-                providerOrderId: String(apiResult.order),
-              },
+          if (mapping && mapping.provider.isActive) {
+            const params = new URLSearchParams({
+              key: mapping.provider.apiKey,
+              action: 'add',
+              service: mapping.providerService.externalServiceId,
+              link,
+              quantity: quantity.toString(),
             });
-            providerStatus = '🔄 Provayderga yuborildi';
-            logger.log(`Order sent to provider: orderId=${order.id}, providerOrderId=${apiResult.order}`);
-          } else {
-            logger.error(`Provider rejected order: ${JSON.stringify(apiResult)}`);
+
+            const resp = await fetch(mapping.provider.apiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: params.toString(),
+            });
+            const apiResult = await resp.json() as Record<string, unknown>;
+
+            if (apiResult.order) {
+              await prisma.order.update({
+                where: { id: order.id },
+                data: {
+                  status: 'PROCESSING',
+                  providerId: mapping.provider.id,
+                  providerOrderId: String(apiResult.order),
+                },
+              });
+              providerStatus = '🔄 Provayderga yuborildi';
+              logger.log(`Order sent to provider: orderId=${order.id}, providerOrderId=${apiResult.order}`);
+            } else {
+              logger.error(`Provider rejected order: ${JSON.stringify(apiResult)}`);
+            }
           }
-        }
       } catch (providerError) {
         logger.error(`Provider send failed: ${providerError}`);
       }
 
+      const packageInfo = packageResults.length > 0
+        ? `\n\n📦 <b>Paket tarkibi:</b>\n${packageResults.join('\n')}`
+        : '';
+
       await ctx.editMessageText(
         `<b>✅ Buyurtma yaratildi!</b>\n\n` +
         `🆔 Buyurtma: <code>#${order.id.slice(-6).toUpperCase()}</code>\n` +
-        `🔧 Xizmat: ${name}\n` +
-        `🔢 Miqdor: ${quantity.toLocaleString()}\n` +
+        `🔧 ${isPackage ? 'Paket' : 'Xizmat'}: ${name}\n` +
+        (isPackage ? '' : `🔢 Miqdor: ${quantity.toLocaleString()}\n`) +
         `💰 Narx: ${formatPrice(totalPrice)}\n` +
-        `📊 Holat: ${providerStatus}\n\n` +
+        `📊 Holat: ${providerStatus}` +
+        `${packageInfo}\n\n` +
         `⏱ O'rtacha bajarilish vaqti: 5-60 daqiqa`,
         { parse_mode: 'HTML' },
       );
