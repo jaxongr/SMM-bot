@@ -37,10 +37,14 @@ export function createOrderComposer(
 
       const cancelKb = new InlineKeyboard().text('❌ Bekor qilish', 'cancel_order');
 
+      const isPackage = svc.minQuantity === 1 && svc.maxQuantity <= 10;
+      const priceInfo = isPackage
+        ? `💰 Paket narxi: ${formatPrice(Number(svc.pricePerUnit))}`
+        : `💰 Narx: ${formatPrice(Number(svc.pricePerUnit) * 1000)} / 1000\n📦 Min: ${svc.minQuantity} | Max: ${svc.maxQuantity}`;
+
       await ctx.editMessageText(
         `<b>🛒 Buyurtma: ${name}</b>\n\n` +
-        `💰 Narx: ${formatPrice(Number(svc.pricePerUnit) * 1000)} / 1000\n` +
-        `📦 Min: ${svc.minQuantity} | Max: ${svc.maxQuantity}\n\n` +
+        `${priceInfo}\n\n` +
         `🔗 <b>Kanal/guruh/profil linkini yuboring:</b>\n\n` +
         `<i>Yoki bekor qilish uchun tugmani bosing</i>`,
         { parse_mode: 'HTML', reply_markup: cancelKb },
@@ -78,12 +82,42 @@ export function createOrderComposer(
 
       session.waitingOrderLink = false;
       session.orderLink = link;
-      session.waitingOrderQuantity = true;
 
       const serviceId = session.orderServiceId as string;
       try {
         const result = await servicesService.findById(serviceId);
         const svc = result.data;
+        const isPackage = svc.minQuantity === 1 && svc.maxQuantity <= 10;
+
+        if (isPackage) {
+          // Paket — miqdor so'ramasdan to'g'ridan tasdiqlashga
+          const lang = getLang(ctx);
+          const name = (svc.name as Record<string, string>)[lang] ||
+            (svc.name as Record<string, string>)['uz'] || 'Xizmat';
+          const totalPrice = Number(svc.pricePerUnit);
+          const userBalance = ctx.user?.balance || 0;
+
+          const keyboard = new InlineKeyboard()
+            .text('✅ Tasdiqlash', `confirm_order:${serviceId}:1`)
+            .row()
+            .text('❌ Bekor qilish', 'cancel_order');
+
+          await ctx.reply(
+            `<b>📦 Paket buyurtmasi:</b>\n\n` +
+            `🔧 Paket: <b>${name}</b>\n` +
+            `🔗 Link: <code>${link}</code>\n` +
+            `💰 Narx: <b>${formatPrice(totalPrice)}</b>\n` +
+            `💳 Balans: <b>${formatPrice(userBalance)}</b>\n\n` +
+            (userBalance < totalPrice
+              ? `❌ <b>Balans yetarli emas!</b> ${formatPrice(totalPrice - userBalance)} yetmaydi.`
+              : `✅ Tasdiqlash uchun tugmani bosing:`),
+            { parse_mode: 'HTML', reply_markup: userBalance >= totalPrice ? keyboard : undefined },
+          );
+          return;
+        }
+
+        // Oddiy xizmat — miqdor so'rash
+        session.waitingOrderQuantity = true;
         await ctx.reply(
           `🔗 Link: <code>${link}</code>\n\n` +
           `🔢 <b>Miqdorni kiriting:</b>\n` +
@@ -91,6 +125,7 @@ export function createOrderComposer(
           { parse_mode: 'HTML' },
         );
       } catch {
+        session.waitingOrderQuantity = true;
         await ctx.reply('🔢 <b>Miqdorni kiriting:</b>', { parse_mode: 'HTML' });
       }
       return;

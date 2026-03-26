@@ -80,7 +80,9 @@ export function createServicesComposer(
         const name = (svc.name as Record<string, string>)[lang] ||
           (svc.name as Record<string, string>)['uz'] || 'Xizmat';
         const price = Number(svc.pricePerUnit);
-        keyboard.text(`${name} — ${formatPrice(price * 1000)}/1K`, `service:${svc.id}`);
+        const isPackage = svc.minQuantity === 1 && svc.maxQuantity <= 10;
+        const priceLabel = isPackage ? formatPrice(price) : `${formatPrice(price * 1000)}/1K`;
+        keyboard.text(`${name} — ${priceLabel}`, `service:${svc.id}`);
         keyboard.row();
       }
       keyboard.text('⬅️ Orqaga', 'show:platforms');
@@ -112,16 +114,21 @@ export function createServicesComposer(
            (svc.description as Record<string, string>)['uz'] || '')
         : '';
       const price = Number(svc.pricePerUnit);
+      const isPackage = svc.minQuantity === 1 && svc.maxQuantity <= 10;
 
       const keyboard = new InlineKeyboard()
         .text('🛒 Buyurtma berish', `order:${serviceId}`)
         .row()
         .text('⬅️ Orqaga', `category:${svc.categoryId}`);
 
+      const priceText = isPackage
+        ? `💰 Paket narxi: <b>${formatPrice(price)}</b>`
+        : `💰 Narx: <b>${formatPrice(price * 1000)}</b> / 1000 dona`;
+
       await ctx.editMessageText(
         `<b>${name}</b>\n\n` +
         `${desc}\n\n` +
-        `💰 Narx: <b>${formatPrice(price * 1000)}</b> / 1000 dona\n` +
+        `${priceText}\n` +
         `📦 Min: <b>${svc.minQuantity.toLocaleString()}</b> | Max: <b>${svc.maxQuantity.toLocaleString()}</b>\n\n` +
         `🔗 Buyurtma berish uchun tugmani bosing:`,
         { parse_mode: 'HTML', reply_markup: keyboard },
